@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewpoint" content="width=device-widrh, initial-scale=1.0">
+    <title>危険物取扱者</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            font-size:16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>危険物クイズ</h1>
+    <p id="question"></p>
+    <div id="choices"></div>
+    <p id="result"></p>
+    <p id="explanation"></p>
+    <button onclick="next()">次の問題</button>
+    <p id="score"></p>
+
+    <script>
+        //問題データ
+        const quizzes = [
+            {
+                question: "【性消】第５類の危険物に共通する性質はどれか",
+                choices: ["酸化性固体","引火性固体","自己反応性物質","酸化性液体"],
+                answer: 2,
+                explanation: "酸化性固体は第一類、引火性固体は第四類、酸化性液体は第六類"
+            },
+            {
+                question: "【性消】第1類の危険物について正しいものはどれか。",
+                choices: ["それ自体は不燃性である", "それ自体がよく燃える", "強い還元性をもつ", "すべて液体である"],
+                answer: 0,
+                explanation: "第一類は分子中に酸素を有する者が多いのでそれ自体は不燃だが加熱や衝撃で酸素を放出して燃焼を促進させる"
+            },
+            {
+                question: "【性消】金属ナトリウムの保存方法として適切なものはどれか",
+                choices: ["水中に保存する","灯油中に保存する","エタノール中に保存する","空気中に開放して保存する"],
+                answer: 1,
+                explanation: "ナトリウムは水や空気と触れると激しく酸化するため灯油中に保管するエタノールともナトリウムエトキシドを作る"
+            },
+            {
+                question: "【物化】メタン16gを完全燃焼させるのに必要な酸素は、標準状態で何Lか。",
+                choices: ["11.2L", "22.4L", "44.8L", "67.2L"],
+                answer: 2,
+                explanation: "メタンはCH4で分子量約16したがって1 mol CH4+2O2→CO2+2H2Oで1:2の関係であるため必要な酸素は44.8 L "
+            },
+            {
+                question: "【法令】ガソリンの指定数量はどれか。",
+                choices: ["200L", "400L", "1,000L", "2,000L"],
+                answer: 0,
+                explanation: "ガソリンは非水溶性第一石油類のため200L"
+            },
+        ];
+        //今何問目か
+        let current = 0;
+        let score = 0;
+        let answered = false;
+        //問題を画面に表示する
+        function shuffle(array) {
+            for (let i = array.length -1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i +1));
+                const temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+        function showQuiz() {
+            const quiz = quizzes[current];
+            document.getElementById("question").textContent = quiz.question;
+            document.getElementById("result").textContent = "";
+            document.getElementById("explanation").textContent = "";
+
+            const choicesDiv =document.getElementById("choices");
+            choicesDiv.innerHTML = "";
+            for (let i = 0; i <quiz.choices.length; i++) {
+                const button =document.createElement("button");
+                button.textContent = quiz.choices[i];
+                button.onclick = function () {
+                    check(i);
+                };
+                choicesDiv.appendChild(button);
+                answered = false;
+            }
+        }
+        //答え合わせ
+        function check(index) {
+            if (answered) return;
+            answered = true;
+            const quiz = quizzes[current];
+            const result = document.getElementById("result");
+            const explanation = document.getElementById("explanation");
+                explanation.textContent = quiz.explanation;
+            if (index === quiz.answer) {
+                result.textContent = "正解!";
+                result.style.color = "green";
+                score++;
+            } else {
+                result.textContent = "不正解...正解は「"+quiz.choices[quiz.answer]+"」です";
+                result.style.color = "red";
+            }
+            const scoreText = document.getElementById("score");
+            scoreText.textContent = "正解数:" + score + " / " + quizzes.length
+        }
+        //次の問題へ
+        function next() {
+            current++;
+            if (current >=quizzes.length) {
+                current = 0;
+                score =0;
+                shuffle(quizzes);
+            }
+            showQuiz();
+        }
+        //最初の一問を表示
+        shuffle(quizzes);
+        showQuiz();
+    </script>
+</body>    
+</html>
