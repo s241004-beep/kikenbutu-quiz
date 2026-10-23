@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewpoint" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e8590c">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>危険物取扱者</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+            background-color: #f7f5f0;
+            color: #333;
+        }
+
+        h1 {
+            background-color: #e8590c;
+            color: whitr;
+            text-align: center;
+            font-size: 22px;
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            font-size: 16px;
+            background-color: white;
+            border: 2px solid #e8590c;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: fff0e6;
+        }
+
+        #question {
+            background-color: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+            line-height: 1.6;
+        }
+
+        #score {
+            text-align: right;
+            color: #888;
+        }
+
+        #result {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        #explanation {
+            background-color: #fff9db;
+            border-left: 4px solid #f59f00;
+            padding: 12px;
+            border-radius: 6px;
+            line-height: 1.6;
+        }
+
+        #explanation:empty {
+            display: none;
+        }
+
+        #controls {
+            margin-top: 80px;
+        }
+
+        #controls button {
+            background-color: #ddd;
+            font-size: 14px;
+        }
+
+        .review {
+            background-color: white;
+            border-left: 4px solid #e03131;
+            padding: 8px 12px;
+            margin: 12px 0;
+            border-radius: 6px;
+            line-height: 1.6;
+        }
+
+        details {
+            background-color: white;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 8px 0;
+        }
+
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #exam-button,
+        #exam-start {
+            background-color: #e8590c;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 24px;
+        }
+
+        #exam-button:hover,
+        #exam-start:hover {
+            background-color: #d9480f;
+        }
+
+        .exam-info {
+            background-color: white;
+            border-radius: 10px;
+            padding: 12px 16px;
+            line-height: 1.6;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>危険物クイズ</h1>
+
+    <div id="modes">
+        <button onclick="startMode('a11')">全科目</button>
+        <button onclick="startMode('法令')">法令</button>
+        <button onclick="startMode('物化')">物化</button>
+        <button onclick="startMode('性消')">性消</button>
+        <button id="exam-button" onclick="showExamIntro()">📝 模擬試験(45問)</button>
+    </div>
+
+    <div id="exam-intro">
+        <h2>模擬試験</h2>
+        <div class="exam-info">
+            <p><b>本試験と同じ構成で出題します</b></p>
+            <ul>
+                <li>法令:15問</li>
+                <li>物理学及び化学:10問</li>
+                <li>性質・火災予防・消火:20問</li>
+            </ul>
+            <p><b>合格基準</b>各科目それぞれ60%以上の正答</p>
+            <p>(本試験の試験時間は2時間半です)</p>
+            <p>途中でモード選択に戻ると結果は記録されません</p>
+        </div>
+        <div id="last-result"></div>
+        <button id="exam-start" onclick="startMode(`exam`)">試験開始</button>
+        <button onclick="backToMenu()">戻る</button>
+    </div>
+
+    <div id="quiz-screen">
+        <p id="score"></p>
+        <p id="question"></p>
+        <div id="choices"></div>
+        <p id="result"></p>
+        <p id="explanation"></p>
+        <div id="controls">
+            <button onclick="next()">次の問題</button>
+            <button onclick="backToMenu()">モード選択</button>
+        </div>
+    </div>
+
+    <script>
+        //問題データ
+        const allQuizzes = [
+            {
+                subject: "性消",
+                question: "【性消】第５類の危険物に共通する性質はどれか",
+                choices: ["酸化性固体", "引火性固体", "自己反応性物質", "酸化性液体"],
+                answer: 2,
+                explanation: "酸化性固体は第一類、引火性固体は第四類、酸化性液体は第六類"
+            },
+            {
+                subject: "性消",
+                question: "【性消】第1類の危険物について正しいものはどれか。",
+                choices: ["それ自体は不燃性である", "それ自体がよく燃える", "強い還元性をもつ", "すべて液体である"],
+                answer: 0,
+                explanation: "第一類は分子中に酸素を有する者が多いのでそれ自体は不燃だが加熱や衝撃で酸素を放出して燃焼を促進させる"
+            },
+            {
+                subject: "性消",
+                question: "【性消】金属ナトリウムの保存方法として適切なものはどれか",
+                choices: ["水中に保存する", "灯油中に保存する", "エタノール中に保存する", "空気中に開放して保存する"],
+                answer: 1,
+                explanation: "ナトリウムは水や空気と触れると激しく酸化するため灯油中に保管するエタノールともナトリウムエトキシドを作る"
+            },
+            {
+                subject: "物化",
+                question: "【物化】メタン16gを完全燃焼させるのに必要な酸素は、標準状態で何Lか。",
+                choices: ["11.2L", "22.4L", "44.8L", "67.2L"],
+                answer: 2,
+                explanation: "メタンはCH4で分子量約16したがって1 mol CH4+2O2→CO2+2H2Oで1:2の関係であるため必要な酸素は44.8 L "
+            },
+            {
+                subject: "法令",
+                question: "【法令】ガソリンの指定数量はどれか。",
+                choices: ["200L", "400L", "1,000L", "2,000L"],
+                answer: 0,
+                explanation: "ガソリンは非水溶性第一石油類のため200L"
+            },
+            {
+                subject: "法令",
+                question: "【法令】灯油の指定数量はどれか。",
+                choices: ["200L", "400L", "1,000L", "2,000L"],
+                answer: 2,
+                explanation: "灯油は第4類第2石油類(非水溶性)で、指定数量は1,000L。軽油も同じ1,000L。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】重油の指定数量はどれか。",
+                choices: ["400L", "1,000L", "2,000L", "6,000L"],
+                answer: 2,
+                explanation: "重油は第4類第3石油類(非水溶性)で、指定数量は2,000L。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】ガソリン400Lと灯油1,000Lを同一場所に貯蔵する場合、指定数量の倍数はいくらか。",
+                choices: ["1.4", "2", "3", "5"],
+                answer: 2,
+                explanation: "ガソリン:400÷200=2、灯油:1,000÷1,000=1。倍数は合計して2+1=3。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】危険物取扱者免状を交付するのは誰か。",
+                choices: ["市町村長", "都道府県知事", "消防署長", "総務大臣"],
+                answer: 1,
+                explanation: "免状は、試験に合格した者に対して都道府県知事が交付する。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】免状の書換えが必要になるのは、添付写真が撮影から何年を経過したときか。",
+                choices: ["3年", "5年", "10年", "15年"],
+                answer: 2,
+                explanation: "写真が撮影から10年を経過したときは、免状の書換えを申請しなければならない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】危険物取扱作業に従事している者は、保安講習を受講した日以後の最初の4月1日から何年以内に次の講習を受講しなければならないか。",
+                choices: ["1年以内", "2年以内", "3年以内", "5年以内"],
+                answer: 2,
+                explanation: "継続して従事している場合、前回受講日以後の最初の4月1日から3年以内ごとに受講する。"
+            },
+
+            // ---- 物理学及び化学(7問) ----
+            {
+                subject: "物化",
+                question: "【物化】燃焼の三要素に含まれないものはどれか。",
+                choices: ["可燃物", "酸素供給源", "点火源", "窒素"],
+                answer: 3,
+                explanation: "燃焼の三要素は、可燃物・酸素供給源・点火源(熱源)。窒素は燃焼に関与しない不燃性ガス。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】引火点の説明として正しいものはどれか。",
+                choices: [
+                    "点火源がなくても自ら燃え出す最低の温度",
+                    "点火源を近づけたとき、引火するのに十分な濃度の蒸気を液面上に発生する最低の液温",
+                    "液体が沸騰を始める温度",
+                    "燃焼が継続できる最高の温度"
+                ],
+                answer: 1,
+                explanation: "引火点は点火源があって燃える最低の液温。点火源なしで燃え出す最低温度は発火点。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】静電気が最も蓄積しやすい条件はどれか。",
+                choices: ["湿度が高いとき", "湿度が低いとき", "流速が遅いとき", "導電率が高い物質のとき"],
+                answer: 1,
+                explanation: "湿度が低いと空気中の水分を通じて電荷が逃げにくく、静電気が蓄積しやすい。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】太陽の熱が宇宙空間を通って地球に届く熱の移動を何というか。",
+                choices: ["伝導", "対流", "放射", "蒸発"],
+                answer: 2,
+                explanation: "放射(ふく射)は、物質を介さずに電磁波として熱が伝わる移動の形式。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】酸化と還元について正しいものはどれか。",
+                choices: [
+                    "物質が電子を失う変化を酸化という",
+                    "物質が酸素を失う変化を酸化という",
+                    "物質が水素と化合する変化を酸化という",
+                    "酸化と還元は別々の反応で同時には起こらない"
+                ],
+                answer: 0,
+                explanation: "酸化は電子を失う・酸素と化合する・水素を失う変化。酸化と還元は必ず同時に起こる。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】プロパン(C3H8)1molを完全燃焼させるのに必要な酸素は何molか。",
+                choices: ["2mol", "3mol", "4mol", "5mol"],
+                answer: 3,
+                explanation: "C3H8 + 5O2 → 3CO2 + 4H2O より、プロパン1molに酸素5molが必要。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】pH3の水溶液の水素イオン濃度は、pH5の水溶液の何倍か。",
+                choices: ["2倍", "10倍", "100倍", "1/100倍"],
+                answer: 2,
+                explanation: "pHが1小さいと水素イオン濃度は10倍。pHが2小さいので10×10=100倍。"
+            },
+
+            // ---- 性質・火災予防・消火(7問) ----
+            {
+                subject: "性消",
+                question: "【性消】鉄粉・マグネシウムなど金属粉の火災に使用してはならない消火剤はどれか。",
+                choices: ["乾燥砂", "膨張ひる石", "水", "膨張真珠岩"],
+                answer: 2,
+                explanation: "金属粉は水と反応して水素を発生することがあるため、注水は危険。乾燥砂などで窒息消火する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】黄りんの保存方法として適切なものはどれか。",
+                choices: ["灯油中に保存する", "水中に保存する", "空気中で開放して保存する", "エタノール中に保存する"],
+                answer: 1,
+                explanation: "黄りんは空気中で自然発火するため、水中に保存して空気との接触を断つ。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】炭化カルシウムが水と反応して発生する可燃性ガスはどれか。",
+                choices: ["水素", "メタン", "アセチレン", "ホスフィン"],
+                answer: 2,
+                explanation: "炭化カルシウム(カーバイド)は水と反応してアセチレンを発生する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】第4類危険物の蒸気について一般的に正しいものはどれか。",
+                choices: [
+                    "空気より軽く、高い所に集まりやすい",
+                    "空気より重く、低い所に滞留しやすい",
+                    "空気と同じ重さで、均一に広がる",
+                    "水に溶けて消える"
+                ],
+                answer: 1,
+                explanation: "第4類の蒸気比重はほとんどが1より大きく、低所に滞留しやすいため換気に注意する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】アルコール類など水溶性液体の火災に泡消火剤を用いる場合、適切なものはどれか。",
+                choices: ["一般の泡消火剤", "耐アルコール泡消火剤", "強化液(棒状)", "棒状の水"],
+                answer: 1,
+                explanation: "水溶性液体は一般の泡を溶かして消してしまうため、耐アルコール泡を使用する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】過酸化水素の貯蔵方法として適切なものはどれか。",
+                choices: [
+                    "完全に密栓して保存する",
+                    "通気のための穴の開いた栓をして冷暗所に保存する",
+                    "日光の当たる場所に保存する",
+                    "金属粉と同じ場所に保存する"
+                ],
+                answer: 1,
+                explanation: "過酸化水素は分解して酸素を発生し容器内圧が上がるため、密栓せず通気性のある栓をする。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】二硫化炭素の貯蔵方法として適切なものはどれか。",
+                choices: [
+                    "容器に水を張って蒸気の発生を抑える",
+                    "灯油中に保存する",
+                    "容器を開放して保存する",
+                    "日光の当たる暖かい場所に保存する"
+                ],
+                answer: 0,
+                explanation: "二硫化炭素は水より重く水に溶けないため、水を張って可燃性蒸気の発生を防ぐ。"
+            },
+            // ===== 追加問題 第2弾(甲種想定・20問) =====
+            // ---- 法令(8問) ----
+            {
+                subject: "法令",
+                question: "【法令】アルコール類の指定数量はどれか。",
+                choices: ["200L", "400L", "1,000L", "2,000L"],
+                answer: 1,
+                explanation: "第4類アルコール類の指定数量は400L。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】製造所等を設置しようとする者が、許可を受けなければならない相手はどれか。",
+                choices: ["消防署長", "市町村長等", "危険物保安監督者", "消防庁長官"],
+                answer: 1,
+                explanation: "製造所等の設置・変更には、市町村長等(市町村長、都道府県知事、総務大臣)の許可が必要。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】指定数量以上の危険物を製造所等以外の場所で仮に貯蔵・取り扱うことができる期間と、その承認者の組み合わせはどれか。",
+                choices: [
+                    "10日以内・所轄消防長または消防署長",
+                    "10日以内・市町村長",
+                    "30日以内・所轄消防長または消防署長",
+                    "30日以内・都道府県知事"
+                ],
+                answer: 0,
+                explanation: "仮貯蔵・仮取扱いは、所轄消防長または消防署長の承認を受けて10日以内に限り認められる。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】免状を亡失した場合の再交付の申請先はどれか。",
+                choices: [
+                    "居住地の市町村長",
+                    "免状の交付または書換えをした都道府県知事",
+                    "勤務地の消防署長",
+                    "総務大臣"
+                ],
+                answer: 1,
+                explanation: "再交付は、免状の交付または書換えをした都道府県知事に申請する。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】危険物保安監督者に選任できる者はどれか。",
+                choices: [
+                    "丙種危険物取扱者で実務経験1年以上の者",
+                    "甲種または乙種危険物取扱者で、製造所等で6か月以上の実務経験を有する者",
+                    "免状の有無を問わず、実務経験3年以上の者",
+                    "甲種危険物取扱者に限り、実務経験は不要"
+                ],
+                answer: 1,
+                explanation: "危険物保安監督者は、甲種または乙種の免状を持ち、製造所等で6か月以上の実務経験がある者から選任する。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】定期点検の記録の保存期間として、原則正しいものはどれか。",
+                choices: ["1年間", "3年間", "5年間", "10年間"],
+                answer: 1,
+                explanation: "定期点検の記録は原則3年間保存する(一部のタンクの漏れ点検など、例外もある)。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】移動タンク貯蔵所で危険物を移送する場合について正しいものはどれか。",
+                choices: [
+                    "危険物取扱者が乗車し、免状を携帯しなければならない",
+                    "免状は事務所に保管しておけばよい",
+                    "危険物取扱者の乗車は不要である",
+                    "丙種危険物取扱者はどの危険物も移送できる"
+                ],
+                answer: 0,
+                explanation: "移送する危険物を取り扱える危険物取扱者が乗車し、免状を携帯しなければならない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】指定数量未満の危険物の貯蔵・取扱いの技術上の基準を定めているものはどれか。",
+                choices: ["消防法", "政令", "市町村条例", "都道府県規則"],
+                answer: 2,
+                explanation: "指定数量未満の危険物の貯蔵・取扱いの基準は、市町村条例で定められる。"
+            },
+
+            // ---- 物理学及び化学(2問) ----
+            {
+                subject: "物化",
+                question: "【物化】次のうち、化学変化はどれか。",
+                choices: ["氷が融ける", "ドライアイスが昇華する", "鉄がさびる", "食塩が水に溶ける"],
+                answer: 2,
+                explanation: "鉄がさびるのは、鉄が酸素などと反応して別の物質になる化学変化。ほかは物質そのものが変わらない物理変化。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】水による消火の主な効果はどれか。",
+                choices: ["除去効果", "冷却効果", "負触媒(抑制)効果", "希釈効果"],
+                answer: 1,
+                explanation: "水は比熱と蒸発熱が大きく、燃焼物から熱を奪う冷却効果が大きい。"
+            },
+
+            // ---- 性質・火災予防・消火(10問) ----
+            {
+                subject: "性消",
+                question: "【性消】赤りんについて正しいものはどれか。",
+                choices: [
+                    "黄りんの同素体である",
+                    "第3類の危険物である",
+                    "常温の空気中で自然発火する",
+                    "水中に保存しなければならない"
+                ],
+                answer: 0,
+                explanation: "赤りんは第2類で、黄りんの同素体。黄りんと異なり常温で自然発火はしない。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】硫黄が燃焼したときに発生する有毒ガスはどれか。",
+                choices: ["一酸化炭素", "二酸化硫黄", "硫化水素", "塩化水素"],
+                answer: 1,
+                explanation: "硫黄は燃焼すると有毒な二酸化硫黄(亜硫酸ガス)を発生する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】ジエチルエーテルを空気や日光に長くさらしたときに生成するおそれのある、爆発性の物質はどれか。",
+                choices: ["過酸化物", "水素", "アセチレン", "二酸化炭素"],
+                answer: 0,
+                explanation: "ジエチルエーテルは空気との接触や日光で爆発性の過酸化物を生成することがある。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】次のうち、第4類の特殊引火物に該当するものはどれか。",
+                choices: ["アセトン", "二硫化炭素", "エタノール", "灯油"],
+                answer: 1,
+                explanation: "二硫化炭素は特殊引火物。アセトンは第1石油類、エタノールはアルコール類、灯油は第2石油類。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】ガソリンの火災の消火に適さないものはどれか。",
+                choices: ["泡消火剤", "二酸化炭素消火剤", "粉末消火剤", "棒状の水"],
+                answer: 3,
+                explanation: "ガソリンは水より軽く水に溶けないため、注水すると浮いて火災が広がるおそれがある。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】第5類の危険物の火災の消火方法として、一般に有効なものはどれか。",
+                choices: [
+                    "大量の水で冷却する",
+                    "二酸化炭素で窒息消火する",
+                    "ハロゲン化物で窒息消火する",
+                    "乾燥砂で覆って窒息消火する"
+                ],
+                answer: 0,
+                explanation: "第5類は分子内に酸素を含むものが多く窒息消火は効果が薄いため、大量の水で冷却する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】硝酸の貯蔵方法として適切なものはどれか。",
+                choices: [
+                    "褐色のびんに入れ、冷暗所に保存する",
+                    "透明なびんに入れ、日光の当たる場所に保存する",
+                    "金属製の容器に入れ、有機物と一緒に保存する",
+                    "容器を開放して保存する"
+                ],
+                answer: 0,
+                explanation: "硝酸は日光や加熱で分解して有毒な二酸化窒素を生じるため、褐色びんで冷暗所に保存する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】第6類の危険物に共通する性質として正しいものはどれか。",
+                choices: [
+                    "それ自体は不燃性で、他の物質の燃焼を促進する",
+                    "それ自体がよく燃える",
+                    "すべて固体である",
+                    "水と反応して可燃性ガスを発生する"
+                ],
+                answer: 0,
+                explanation: "第6類は酸化性液体。それ自体は燃えないが、酸素を供給して他の物質の燃焼を促進する。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】過酸化ナトリウムなどアルカリ金属の過酸化物の火災に適した消火方法はどれか。",
+                choices: ["大量の注水", "乾燥砂で覆う", "強化液(棒状)の放射", "泡消火剤の放射"],
+                answer: 1,
+                explanation: "アルカリ金属の過酸化物は水と反応して酸素を発生するため、注水は厳禁。乾燥砂などで覆う。"
+            },
+            {
+                subject: "性消",
+                question: "【性消】ガソリンを容器に詰め替えるときの静電気対策として適切なものはどれか。",
+                choices: [
+                    "流速をできるだけ速くする",
+                    "容器や機器を接地(アース)し、流速を遅くする",
+                    "乾燥した場所で作業する",
+                    "絶縁性の高い容器を使う"
+                ],
+                answer: 1,
+                explanation: "静電気の発生・蓄積を防ぐため、流速を遅くし、接地して電荷を逃がす。"
+            },
+        ];
+        let quizzes = allQuizzes;
+        //今何問目か
+        let current = 0;
+        let score = 0;
+        let answered = false;
+        let isExam = false;
+        let correctBySubject = {}
+        let wrongQuizzes = [];
+        //問題を画面に表示する
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+        function pickRandom(subject, count) {
+            const list = allQuizzes.filter(function (quiz) {
+                return quiz.subject === subject;
+            });
+            shuffle(list);
+            return list.slice(0, count);
+        }
+        function startMode(mode) {
+            if (mode === "a11") {
+                quizzes = allQuizzes;
+            } else if (mode === "exam") {
+                quizzes = pickRandom("法令", 15).concat(
+                    pickRandom("物化", 10),
+                    pickRandom("性消", 20)
+                );
+            } else {
+                quizzes = allQuizzes.filter(function (quiz) {
+                    return quiz.subject === mode;
+                })
+            }
+            current = 0;
+            score = 0;
+            isExam = (mode === "exam");
+            correctBySubject = { "法令": 0, "物化": 0, "性消": 0 };
+            wrongQuizzes = [];
+            shuffle(quizzes);
+            document.getElementById("modes").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "block";
+            document.getElementById("exam-intro").style.display = "none";
+            updateScore();
+            showQuiz();
+        }
+        function backToMenu() {
+            document.getElementById("modes").style.display = "block";
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("exam-intro").style.display = "none";
+        }
+        // 正解数の表示を更新する
+        function updateScore() {
+            document.getElementById("score").textContent =
+                "正解数:" + score + " / " + quizzes.length;
+        }
+        function showQuiz() {
+            answered = false;
+            const quiz = quizzes[current];
+            document.getElementById("question").textContent = quiz.question;
+            document.getElementById("result").textContent = "";
+            document.getElementById("explanation").textContent = "";
+
+            const choicesDiv = document.getElementById("choices");
+            choicesDiv.innerHTML = "";
+            for (let i = 0; i < quiz.choices.length; i++) {
+                const button = document.createElement("button");
+                button.textContent = quiz.choices[i];
+                button.onclick = function () {
+                    check(i);
+                };
+                choicesDiv.appendChild(button);
+            }
+        }
+        //答え合わせ
+        function check(index) {
+            if (answered) return;
+            answered = true;
+            const quiz = quizzes[current];
+            const result = document.getElementById("result");
+            const explanation = document.getElementById("explanation");
+            explanation.textContent = quiz.explanation;
+            if (index === quiz.answer) {
+                result.textContent = "正解!";
+                result.style.color = "green";
+                score++;
+                correctBySubject[quiz.subject]++;
+            } else {
+                result.textContent = "不正解...正解は「" + quiz.choices[quiz.answer] + "」です";
+                result.style.color = "red";
+                wrongQuizzes.push(quiz);
+            }
+            updateScore();
+        }
+        //次の問題へ
+        function next() {
+            current++;
+            if (current >= quizzes.length) {
+                if (isExam) {
+                    showExamResult();
+                    return;
+                }
+                current = 0;
+                score = 0;
+                shuffle(quizzes);
+            }
+            showQuiz();
+        }
+        //モード選択から始動
+        backToMenu();
+        function showExamIntro() {
+            document.getElementById("modes").style, display = "none";
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("exam-intro").style.display = "block";
+
+            const saved = localStorage.getItem("lastExam");
+            const lastResult = document.getElementById("last-result");
+            if (saved) {
+                lastResult.innerHTML = "<h3>前回の成績</h3>" + saved;
+            } else {
+                lastResult.innerHTML = "<p>まだ受験記録はありません</p>";
+            }
+        }
+        function showExamResult() {
+            const subjects = ["法令", "物化", "性消"];
+            let text = "";
+            let allPass = true;
+            for (let i = 0; i < subjects.length; i++) {
+                const s = subjects[i];
+                const total = quizzes.filter(function (quiz) {
+                    return quiz.subject === s;
+                }).length;
+                const correct = correctBySubject[s];
+                let rate = 0;
+                if (total > 0) {
+                    rate = Math.floor(correct / total * 100);
+                }
+                const pass = correct * 10 >= total * 6;
+                if (!pass) {
+                    allPass = false;
+                }
+                text += s + ":" + correct + "/" + total + "(" + rate + "%)" + (pass ? "o" : "x") + "<br>";
+            }
+            const now = new Date().toLocaleString("ja-JP");
+            const summary = "<p>" + now + "</p>" + text
+                + "<p><b>" + (allPass ? "合格" : "不合格") + "</b></p>";
+            localStorage.setItem("lastExam", summary);
+            text += "<h3>間違えた問題(" + wrongQuizzes.length + "問)</h3>";
+            if (wrongQuizzes.length === 0) {
+                text += "<p>全問正解です</p>";
+            }
+            for (let i = 0; i < wrongQuizzes.length; i++) {
+                const s = subjects[i];
+                const wrongs = wrongQuizzes.filter(function (quiz) {
+                    return quiz.subject === s;
+                });
+                if (wrongs.length === 0) {
+                    continue;
+                }
+                text += "<details>";
+                text += "<summary>" + s + "(" + wrongs.length + "問)</summary>";
+                for (let j = 0; j < wrongs.length; j++) {
+                    const q = wrongs[j];
+                    text += "<div class=`review`>"
+                        + "<p>" + q.question + "</p>"
+                        + "<p>正解:" + q.choices[q.answer] + "</p>"
+                        + "<p>" + q.explanation + "</p>"
+                        + "<div>";
+                }
+                text += "</details>";
+            }
+            document.getElementById("question").textContent = "模擬試験 結果";
+            document.getElementById("choices").innerHTML = text;
+            document.getElementById("explanation").textContent = "";
+            const result = document.getElementById("result");
+            if (allPass) {
+                result.textContent = "合格";
+                result.style.color = "green";
+            } else {
+                result.textContent = "不合格...60%未満の科目を復習しましょう";
+                result.style.color = "red";
+            }
+        }
+        // サービスワーカーを登録する
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js");
+        }
+    </script>
+</body>
+
+</html>
