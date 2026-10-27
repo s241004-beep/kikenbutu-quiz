@@ -125,6 +125,30 @@
             line-height: 1.6;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
+
+        #add-screen label {
+            display: block;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        #add-screen input,
+        #add-screen textarea,
+        #add-screen select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            margin-top: 4px;
+        }
+        #my-list-items button {
+            display: inline-block;
+            width: auto;
+            padding: 6px 16px;
+            margin: 4px 8px 4px 0;
+            font-size: 14px;
+        }
     </style>
 </head>
 
@@ -137,6 +161,59 @@
         <button onclick="startMode('物化')">物化</button>
         <button onclick="showRuiSelect()">性消</button>
         <button id="exam-button" onclick="showExamIntro()">📝 模擬試験(45問)</button>
+        <button onclick="showScreen(`add-screen`)">問題を追加</button>
+    </div>
+    <div id="my-list">
+        <h2>自作の問題一覧</h2>
+        <button onclick="showAddScreen()">新しく追加</button>
+        <div id="my-list-items"></div>
+        <button onclick="backToMenu()">戻る</button>
+    </div>
+
+    <div id="add-screen">
+        <h2 id="add-title">問題追加</h2>
+        <button onclick="showMyList()">自作問題一覧を見る</button>
+
+        <label>科目</label>
+        <select id="add-subject">
+            <option value="法令">法令</option>
+            <option value="物化">物化</option>
+            <option value="性消">性消</option>
+        </select>
+
+        <label>類（性消）</label>
+        <select id="add-rui">
+            <option value="1">第1類</option>
+            <option value="2">第2類</option>
+            <option value="3">第3類</option>
+            <option value="4">第4類</option>
+            <option value="5">第5類</option>
+            <option value="6">第6類</option>
+        </select>
+
+        <label>問題文</label>
+        <textarea id="add-question" rows="4" cols="50"></textarea>
+
+        <label>選択肢</label>
+        <input type="text" id="add-choice0" placeholder="選択肢1">
+        <input type="text" id="add-choice1" placeholder="選択肢2">
+        <input type="text" id="add-choice2" placeholder="選択肢3">
+        <input type="text" id="add-choice3" placeholder="選択肢4">
+
+        <label>正解</label>
+        <select id="add-answer">
+            <option value="0">選択肢1</option>
+            <option value="1">選択肢2</option>
+            <option value="2">選択肢3</option>
+            <option value="3">選択肢4</option>
+        </select>
+
+        <label>解説</label>
+        <textarea id="add-explanation" rows="4" cols="50"></textarea>
+
+        <p id="add-message"></p>
+        <button onclick="saveMyQuiz()">保存する</button>
+        <button onclick="backToMenu()">戻る</button>
     </div>
 
     <div id="rui-select">
@@ -1015,8 +1092,16 @@
                 explanation: "濃硝酸は鉄・アルミニウムなどの表面に緻密な酸化被膜(不動態)をつくるため、それ以上は侵されにくい。"
             },
         ];
-        
+
         let quizzes = allQuizzes;
+        let myQuizzes = [];
+        const savedMine = localStorage.getItem("myQuizzes");
+        if (savedMine) {
+            myQuizzes = JSON.parse(savedMine);
+        }
+        for (let i = 0; i < myQuizzes.length; i++) {
+            allQuizzes.push(myQuizzes[i]);
+        }
         //今何問目か
         let current = 0;
         let score = 0;
@@ -1053,43 +1138,206 @@
                     return quiz.subject === mode;
                 })
             }
-            
+
             current = 0;
             score = 0;
             isExam = (mode === "exam");
-            correctBySubject = {"法令": 0, "物化": 0, "性消": 0};
+            correctBySubject = { "法令": 0, "物化": 0, "性消": 0 };
             wrongQuizzes = [];
             shuffle(quizzes);
-            document.getElementById("modes").style.display = "none";
-            document.getElementById("quiz-screen").style.display = "block";
-            document.getElementById("exam-intro").style.display = "none";
-            document.getElementById("rui-select").style.display = "none";
+            showScreen("quiz-screen");
             updateScore();
             showQuiz();
         }
         function startRui(rui) {
-                quizzes = allQuizzes.filter(function (quiz) {
-                    return quiz.subject === "性消" && quiz.rui === rui;
-                });
+            quizzes = allQuizzes.filter(function (quiz) {
+                return quiz.subject === "性消" && quiz.rui === rui;
+            });
             current = 0;
             score = 0;
             isExam = false;
-            correctBySubject = {"法令": 0, "物化": 0, "性消": 0};
+            correctBySubject = { "法令": 0, "物化": 0, "性消": 0 };
             wrongQuizzes = [];
             shuffle(quizzes);
-            document.getElementById("modes").style.display = "none";
-            document.getElementById("quiz-screen").style.display = "block";
-            document.getElementById("exam-intro").style.display = "none";
-            document.getElementById("rui-select").style.display = "none";
+            showScreen("quiz-screen");
             updateScore();
             showQuiz();
         }
-       
+        function showScreen(id) {
+            const screens = ["modes", "quiz-screen", "exam-intro", "rui-select", "add-screen", "my-list"];
+            for (let i = 0; i < screens.length; i++) {
+                if (screens[i] === id) {
+                    document.getElementById(screens[i]).style.display = "block";
+                } else {
+                    document.getElementById(screens[i]).style.display = "none";
+                }
+            }
+        }
+        let editingIndex = -1;
+
+        function saveMyQuizzesToStorage() {
+            localStorage.setItem("myQuizzes",JSON.stringify(myQuizzes));
+        }
+
+        function clearAddForm() {
+            document.getElementById("add-question").value = "";
+            document.getElementById("add-explanation").value = "";
+            for (let i = 0; i < 4; i++) {
+                document.getElementById("add-choice" + i).value = "";
+            }
+            document.getElementById("add-answer").value = 0;
+        }
+
+        function showAddScreen() {
+            editingIndex = -1;
+            clearAddForm();
+            document.getElementById("add-title").textContent = "問題を追加";
+            document.getElementById("add-message").textContent = "";
+            showScreen("add-screen");
+        }
+
+        function showMyList() {
+            showScreen("my-list");
+            const box = document.getElementById("my-list-items");
+            box.innerHTML = "";
+
+            if (myQuizzes.length === 0) {
+                box.textContent = "まだ自作問題はありません";
+                return;
+            }
+
+            for (let i = 0; i < myQuizzes.length; i++) {
+                const q = myQuizzes[i];
+
+                let label = q.subject;
+                if (q.rui) {
+                    label += "・第" + q.rui + "類";
+                }
+
+                const item = document.createElement("div");
+                item.className = "review";
+
+                const text = document.createElement("p");
+                text.textContent = (i + 1) + ".[" + label + "]"
+                    + q.question.replace("【" + q.subject + "】","");
+                
+                const editButton = document.createElement("button");
+                editButton.textContent = "編集";
+                editButton.onclick = function() {
+                    editMyQuiz(i);
+                };
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "削除"
+                deleteButton.onclick = function () {
+                    deleteMyQuiz(i);
+                };
+
+                item.appendChild(text);
+                item.appendChild(editButton);
+                item.appendChild(deleteButton);
+                box.appendChild(item);
+            }
+        }
+
+        function editMyQuiz(i) {
+            const q = myQuizzes[i];
+            editingIndex = i;
+
+            document.getElementById("add-subject").value = q.subject;
+            if (q.rui) {
+                document.getElementById("add-rui").value = q.rui;
+            }
+            document.getElementById("add-question").value = 
+                q.question.replace("【" + q.subject + "】","");
+            for (let j = 0; j < 4; j++) {
+                document.getElementById("add-choice" + j).value = q.choices[j];
+            }
+            document.getElementById("add-answer").value = q.answer;
+            if (q.explanation === "(解説なし)") {
+                document.getElementById("add-explanation").value = "";
+            } else {
+                document.getElementById("add-explanation").value = q.explanation;
+            }
+
+            document.getElementById("add-title").textContent = "問題を編集";
+            document.getElementById("add-message").textContent = "";
+            showScreen("add-screen");
+        }
+
+        function deleteMyQuiz(i) {
+            if (!confirm("この問題を削除しますか？")) {
+                return;
+            }
+            const q = myQuizzes[i];
+            const pos = allQuizzes.indexOf(q);
+            if (pos !== -1) {
+                allQuizzes.splice(pos, 1);
+            }
+            myQuizzes.splice(i, 1);
+            saveMyQuizzesToStorage();
+            showMyList();
+        }
+
+        //入力した問題を保存するよん
+        function saveMyQuiz() {
+            const subject = document.getElementById("add-subject").value;
+            const question = document.getElementById("add-question").value.trim();
+            const explanation = document.getElementById("add-explanation").value.trim();
+            const answer = Number(document.getElementById("add-answer").value);
+            const message = document.getElementById("add-message");
+
+            const choices = [];
+            for (let i = 0; i < 4; i++) {
+                choices.push(document.getElementById("add-choice" + i).value.trim());
+            }
+
+            if (question === "" || choices.includes("")) {
+                message.textContent = "問題文と選択肢4つをすべて入力してください";
+                message.style.color = "red";
+                return;
+            }
+
+            const quiz = {
+                subject: subject,
+                question: "【" + subject + "】" + question,
+                chices: choices,
+                answer: answer,
+                explanation: explanation || "(解説なし)",
+                mine: true
+            };
+            if (subject === "性消") {
+                quiz.rui = Number(document.getElementById("add-rui").value);
+            }
+
+            if (editingIndex >= 0) {
+                const old = myQuizzes[editingIndex];
+                const pos = allQuizzes.indexOf(old);
+                if (pos !== -1) {
+                    allQuizzes[pos] = quiz;
+                }
+                    saveMyQuizzesToStorage();
+                    editingIndex = -1;
+                    showMyList();
+                    return;
+            }
+
+            allQuizzes.push(quiz);
+            myQuizzes.push(quiz);
+            saveMyQuizzesToStorage();
+
+            message.textContent = "保存しました(自作問題:" + myQuizzes.length + "問)";
+            message.style.color = "green";
+
+            document.getElementById("add-question").value = "";
+            document.getElementById("add-explanation").value = "";
+            for (let i = 0; i < 4; i++) {
+                document.getElementById("add-choice" + i).value = "";
+            }
+        }
+
         function backToMenu() {
-            document.getElementById("modes").style.display = "block";
-            document.getElementById("quiz-screen").style.display = "none";
-            document.getElementById("exam-intro").style.display = "none";
-            document.getElementById("rui-select").style.display = "none";
+            showScreen("modes");
         }
         // 正解数の表示を更新する
         function updateScore() {
@@ -1158,10 +1406,7 @@
         //モード選択から始動
         backToMenu();
         function showExamIntro() {
-            document.getElementById("modes").style, display = "none";
-            document.getElementById("quiz-screen").style.display = "none";
-            document.getElementById("exam-intro").style.display = "block";
-            document.getElementById("rui-select").style.display = "none";
+            showScreen("exam-intro");
 
             const saved = localStorage.getItem("lastExam");
             const lastResult = document.getElementById("last-result");
@@ -1171,11 +1416,8 @@
                 lastResult.innerHTML = "<p>まだ受験記録はありません</p>";
             }
         }
-        function　showRuiSelect() {
-            document.getElementById("modes").style.display = "none";
-            document.getElementById("quiz-screen").style.display = "none";
-            document.getElementById("exam-intro").style.display = "none";
-            document.getElementById("rui-select").style.display = "block";
+        function showRuiSelect() {
+            showScreen("rui-select");
         }
         function showExamResult() {
             const subjects = ["法令", "物化", "性消"];
