@@ -142,12 +142,21 @@
             border-radius: 8px;
             margin-top: 4px;
         }
+
         #my-list-items button {
             display: inline-block;
             width: auto;
             padding: 6px 16px;
             margin: 4px 8px 4px 0;
             font-size: 14px;
+        }
+        #otsu-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        #otsu-buttons button {
+            margin: 0;
         }
     </style>
 </head>
@@ -231,18 +240,25 @@
     <div id="exam-intro">
         <h2>模擬試験</h2>
         <div class="exam-info">
-            <p><b>本試験と同じ構成で出題します</b></p>
-            <ul>
-                <li>法令:15問</li>
-                <li>物理学及び化学:10問</li>
-                <li>性質・火災予防・消火:20問</li>
-            </ul>
+            <p><b>本試験と同じ構成で出題します（ただし順不同）</b></p>
+            <p><b>甲種</b>:法令15問・物化10問・性消20問</p>
+            <p><b>乙種</b>:法令15問・物化10問・性消10問</p>
             <p><b>合格基準</b>各科目それぞれ60%以上の正答</p>
-            <p>(本試験の試験時間は2時間半です)</p>
+            <p>(本試験の試験時間は甲種2時間半乙種2時間)</p>
             <p>途中でモード選択に戻ると結果は記録されません</p>
         </div>
         <div id="last-result"></div>
-        <button id="exam-start" onclick="startMode(`exam`)">試験開始</button>
+
+        <button id="exam-start" onclick="startMode(`exam`)">甲種試験開始</button>
+        <h3>乙種(類を選んで開始)</h3>
+        <div id="otsu-buttons">
+            <button onclick="startOtsuExam(1)">第１類</button>
+            <button onclick="startOtsuExam(2)">第2類</button>
+            <button onclick="startOtsuExam(3)">第3類</button>
+            <button onclick="startOtsuExam(4)">第4類</button>
+            <button onclick="startOtsuExam(5)">第5類</button>
+            <button onclick="startOtsuExam(6)">第6類</button>
+        </div>
         <button onclick="backToMenu()">戻る</button>
     </div>
 
@@ -1109,6 +1125,8 @@
         let isExam = false;
         let correctBySubject = {}
         let wrongQuizzes = [];
+        let examKey = "lastExam";
+        let examTitle = "甲種"
         //問題を画面に表示する
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -1125,6 +1143,35 @@
             shuffle(list);
             return list.slice(0, count);
         }
+        function pickRandomRui(rui, count) {
+            const list =allQuizzes.filter(function (quiz) {
+                return quiz.subject === "性消" && quiz.rui === rui;
+            });
+            shuffle(list);
+            return list.slice(0,count);
+        }
+
+        function beginQuiz() {
+            current = 0;
+            score = 0;
+            correctBySubject = {"法令": 0, "物化": 0, "性消": 0};
+            wrongQuizzes = [];
+            shuffle(quizzes);
+            showScreen("quiz-screen");
+            updateScore();
+            showQuiz();
+        }
+
+        function startOtsuExam(rui) {
+            quizzes = pickRandom("法令", 15).concat(
+                pickRandom("物化", 10),
+                pickRandom(rui, 10)
+        );
+        isExam = true;
+        examKey = "lastExam-otsu" + rui;
+        examTitle = "乙種 第" + rui + "類"
+        beginQuiz();
+        }
         function startMode(mode) {
             if (mode === "all") {
                 quizzes = allQuizzes;
@@ -1133,36 +1180,26 @@
                     pickRandom("物化", 10),
                     pickRandom("性消", 20)
                 );
+                examKey = "lastExam";
+                examTitle = "甲種";
             } else {
                 quizzes = allQuizzes.filter(function (quiz) {
                     return quiz.subject === mode;
-                })
+                });
             }
-
-            current = 0;
-            score = 0;
             isExam = (mode === "exam");
-            correctBySubject = { "法令": 0, "物化": 0, "性消": 0 };
-            wrongQuizzes = [];
-            shuffle(quizzes);
-            showScreen("quiz-screen");
-            updateScore();
-            showQuiz();
+            beginQuiz();
         }
+
         function startRui(rui) {
             quizzes = allQuizzes.filter(function (quiz) {
                 return quiz.subject === "性消" && quiz.rui === rui;
             });
-            current = 0;
-            score = 0;
+           
             isExam = false;
-            correctBySubject = { "法令": 0, "物化": 0, "性消": 0 };
-            wrongQuizzes = [];
-            shuffle(quizzes);
-            showScreen("quiz-screen");
-            updateScore();
-            showQuiz();
+            beginQuiz();
         }
+           
         function showScreen(id) {
             const screens = ["modes", "quiz-screen", "exam-intro", "rui-select", "add-screen", "my-list"];
             for (let i = 0; i < screens.length; i++) {
@@ -1176,7 +1213,7 @@
         let editingIndex = -1;
 
         function saveMyQuizzesToStorage() {
-            localStorage.setItem("myQuizzes",JSON.stringify(myQuizzes));
+            localStorage.setItem("myQuizzes", JSON.stringify(myQuizzes));
         }
 
         function clearAddForm() {
@@ -1219,11 +1256,11 @@
 
                 const text = document.createElement("p");
                 text.textContent = (i + 1) + ".[" + label + "]"
-                    + q.question.replace("【" + q.subject + "】","");
-                
+                    + q.question.replace("【" + q.subject + "】", "");
+
                 const editButton = document.createElement("button");
                 editButton.textContent = "編集";
-                editButton.onclick = function() {
+                editButton.onclick = function () {
                     editMyQuiz(i);
                 };
 
@@ -1248,8 +1285,8 @@
             if (q.rui) {
                 document.getElementById("add-rui").value = q.rui;
             }
-            document.getElementById("add-question").value = 
-                q.question.replace("【" + q.subject + "】","");
+            document.getElementById("add-question").value =
+                q.question.replace("【" + q.subject + "】", "");
             for (let j = 0; j < 4; j++) {
                 document.getElementById("add-choice" + j).value = q.choices[j];
             }
@@ -1316,10 +1353,10 @@
                 if (pos !== -1) {
                     allQuizzes[pos] = quiz;
                 }
-                    saveMyQuizzesToStorage();
-                    editingIndex = -1;
-                    showMyList();
-                    return;
+                saveMyQuizzesToStorage();
+                editingIndex = -1;
+                showMyList();
+                return;
             }
 
             allQuizzes.push(quiz);
