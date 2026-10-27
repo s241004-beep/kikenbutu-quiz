@@ -1,6 +1,6 @@
 {
-    "name": "甲種危険物一問一答",
-    "short_name": "危険物甲種",
+    "name": "危険物一問一答",
+    "short_name": "危険物",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#f7f5f0",
