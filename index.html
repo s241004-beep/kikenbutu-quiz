@@ -135,8 +135,20 @@
         <button onclick="startMode('a11')">全科目</button>
         <button onclick="startMode('法令')">法令</button>
         <button onclick="startMode('物化')">物化</button>
-        <button onclick="startMode('性消')">性消</button>
+        <button onclick="showRuiSelect()">性消</button>
         <button id="exam-button" onclick="showExamIntro()">📝 模擬試験(45問)</button>
+    </div>
+
+    <div id="rui-select">
+        <h2>性消：類を選択する</h2>
+        <button onclick="startMode(`性消`)">全類</button>
+        <button onclick="startRui(1)">第１類</button>
+        <button onclick="startRui(2)">第２類</button>
+        <button onclick="startRui(3)">第３類</button>
+        <button onclick="startRui(4)">第4類</button>
+        <button onclick="startRui(5)">第5類</button>
+        <button onclick="startRui(6)">第6類</button>
+        <button onclick="backToMenu()">戻る</button>
     </div>
 
     <div id="exam-intro">
@@ -172,41 +184,50 @@
     <script>
         //問題データ
         const allQuizzes = [
+            // ① 問題データ(甲種・乙種対応)
+            // 性消の問題には rui(第何類の問題か)を付けています
+            // ===== 最初の5問 =====
             {
                 subject: "性消",
-                question: "【性消】第５類の危険物に共通する性質はどれか",
-                choices: ["酸化性固体", "引火性固体", "自己反応性物質", "酸化性液体"],
+                rui: 5,
+                question: "【性消】第5類の危険物に共通する性質はどれか。",
+                choices: ["酸化性固体", "引火性液体", "自己反応性物質", "酸化性液体"],
                 answer: 2,
-                explanation: "酸化性固体は第一類、引火性固体は第四類、酸化性液体は第六類"
+                explanation: "第5類は自己反応性物質。分子内に酸素を含むものが多く、加熱や衝撃で自ら分解・燃焼する。"
             },
             {
                 subject: "性消",
+                rui: 1,
                 question: "【性消】第1類の危険物について正しいものはどれか。",
                 choices: ["それ自体は不燃性である", "それ自体がよく燃える", "強い還元性をもつ", "すべて液体である"],
                 answer: 0,
-                explanation: "第一類は分子中に酸素を有する者が多いのでそれ自体は不燃だが加熱や衝撃で酸素を放出して燃焼を促進させる"
+                explanation: "第1類は酸化性固体。それ自体は燃えないが、酸素を放出して他の物質の燃焼を激しくする。"
             },
             {
                 subject: "性消",
-                question: "【性消】金属ナトリウムの保存方法として適切なものはどれか",
-                choices: ["水中に保存する", "灯油中に保存する", "エタノール中に保存する", "空気中に開放して保存する"],
+                rui: 3,
+                question: "【性消】金属ナトリウムの保存方法として適切なものはどれか。",
+                choices: ["水中に保存する", "灯油中に保存する", "エタノール中に保存する", "空気中で開放して保存する"],
                 answer: 1,
-                explanation: "ナトリウムは水や空気と触れると激しく酸化するため灯油中に保管するエタノールともナトリウムエトキシドを作る"
+                explanation: "ナトリウム(第3類)は水や空気中の水分と反応して水素を発生するため、灯油中に保存する。"
             },
             {
                 subject: "物化",
                 question: "【物化】メタン16gを完全燃焼させるのに必要な酸素は、標準状態で何Lか。",
                 choices: ["11.2L", "22.4L", "44.8L", "67.2L"],
                 answer: 2,
-                explanation: "メタンはCH4で分子量約16したがって1 mol CH4+2O2→CO2+2H2Oで1:2の関係であるため必要な酸素は44.8 L "
+                explanation: "CH4 + 2O2 → CO2 + 2H2O より、メタン1mol(16g)に酸素2molが必要。2 × 22.4L = 44.8L"
             },
             {
                 subject: "法令",
                 question: "【法令】ガソリンの指定数量はどれか。",
                 choices: ["200L", "400L", "1,000L", "2,000L"],
                 answer: 0,
-                explanation: "ガソリンは非水溶性第一石油類のため200L"
+                explanation: "ガソリンは第4類第1石油類(非水溶性)で、指定数量は200L。"
             },
+
+            // ===== 追加問題(甲種想定・20問) =====
+            // ---- 法令(6問) ----
             {
                 subject: "法令",
                 question: "【法令】灯油の指定数量はどれか。",
@@ -314,6 +335,7 @@
             // ---- 性質・火災予防・消火(7問) ----
             {
                 subject: "性消",
+                rui: 2,
                 question: "【性消】鉄粉・マグネシウムなど金属粉の火災に使用してはならない消火剤はどれか。",
                 choices: ["乾燥砂", "膨張ひる石", "水", "膨張真珠岩"],
                 answer: 2,
@@ -321,6 +343,7 @@
             },
             {
                 subject: "性消",
+                rui: 3,
                 question: "【性消】黄りんの保存方法として適切なものはどれか。",
                 choices: ["灯油中に保存する", "水中に保存する", "空気中で開放して保存する", "エタノール中に保存する"],
                 answer: 1,
@@ -328,6 +351,7 @@
             },
             {
                 subject: "性消",
+                rui: 3,
                 question: "【性消】炭化カルシウムが水と反応して発生する可燃性ガスはどれか。",
                 choices: ["水素", "メタン", "アセチレン", "ホスフィン"],
                 answer: 2,
@@ -335,6 +359,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】第4類危険物の蒸気について一般的に正しいものはどれか。",
                 choices: [
                     "空気より軽く、高い所に集まりやすい",
@@ -347,6 +372,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】アルコール類など水溶性液体の火災に泡消火剤を用いる場合、適切なものはどれか。",
                 choices: ["一般の泡消火剤", "耐アルコール泡消火剤", "強化液(棒状)", "棒状の水"],
                 answer: 1,
@@ -354,6 +380,7 @@
             },
             {
                 subject: "性消",
+                rui: 6,
                 question: "【性消】過酸化水素の貯蔵方法として適切なものはどれか。",
                 choices: [
                     "完全に密栓して保存する",
@@ -366,6 +393,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】二硫化炭素の貯蔵方法として適切なものはどれか。",
                 choices: [
                     "容器に水を張って蒸気の発生を抑える",
@@ -474,6 +502,7 @@
             // ---- 性質・火災予防・消火(10問) ----
             {
                 subject: "性消",
+                rui: 2,
                 question: "【性消】赤りんについて正しいものはどれか。",
                 choices: [
                     "黄りんの同素体である",
@@ -486,6 +515,7 @@
             },
             {
                 subject: "性消",
+                rui: 2,
                 question: "【性消】硫黄が燃焼したときに発生する有毒ガスはどれか。",
                 choices: ["一酸化炭素", "二酸化硫黄", "硫化水素", "塩化水素"],
                 answer: 1,
@@ -493,6 +523,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】ジエチルエーテルを空気や日光に長くさらしたときに生成するおそれのある、爆発性の物質はどれか。",
                 choices: ["過酸化物", "水素", "アセチレン", "二酸化炭素"],
                 answer: 0,
@@ -500,6 +531,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】次のうち、第4類の特殊引火物に該当するものはどれか。",
                 choices: ["アセトン", "二硫化炭素", "エタノール", "灯油"],
                 answer: 1,
@@ -507,6 +539,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】ガソリンの火災の消火に適さないものはどれか。",
                 choices: ["泡消火剤", "二酸化炭素消火剤", "粉末消火剤", "棒状の水"],
                 answer: 3,
@@ -514,6 +547,7 @@
             },
             {
                 subject: "性消",
+                rui: 5,
                 question: "【性消】第5類の危険物の火災の消火方法として、一般に有効なものはどれか。",
                 choices: [
                     "大量の水で冷却する",
@@ -526,6 +560,7 @@
             },
             {
                 subject: "性消",
+                rui: 6,
                 question: "【性消】硝酸の貯蔵方法として適切なものはどれか。",
                 choices: [
                     "褐色のびんに入れ、冷暗所に保存する",
@@ -538,6 +573,7 @@
             },
             {
                 subject: "性消",
+                rui: 6,
                 question: "【性消】第6類の危険物に共通する性質として正しいものはどれか。",
                 choices: [
                     "それ自体は不燃性で、他の物質の燃焼を促進する",
@@ -550,6 +586,7 @@
             },
             {
                 subject: "性消",
+                rui: 1,
                 question: "【性消】過酸化ナトリウムなどアルカリ金属の過酸化物の火災に適した消火方法はどれか。",
                 choices: ["大量の注水", "乾燥砂で覆う", "強化液(棒状)の放射", "泡消火剤の放射"],
                 answer: 1,
@@ -557,6 +594,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】ガソリンを容器に詰め替えるときの静電気対策として適切なものはどれか。",
                 choices: [
                     "流速をできるだけ速くする",
@@ -567,6 +605,8 @@
                 answer: 1,
                 explanation: "静電気の発生・蓄積を防ぐため、流速を遅くし、接地して電荷を逃がす。"
             },
+            // ===== 追加問題 第3弾(甲種想定・40問) =====
+            // ---- 法令(13問) ----
             {
                 subject: "法令",
                 question: "【法令】アセトン(第1石油類・水溶性液体)の指定数量はどれか。",
@@ -782,6 +822,7 @@
             // ---- 性質・火災予防・消火(18問) ----
             {
                 subject: "性消",
+                rui: 1,
                 question: "【性消】塩素酸カリウムについて正しいものはどれか。",
                 choices: [
                     "第2類の危険物である",
@@ -794,6 +835,7 @@
             },
             {
                 subject: "性消",
+                rui: 1,
                 question: "【性消】硝酸アンモニウムを水に溶かしたときに起こる現象はどれか。",
                 choices: [
                     "発熱して温度が上がる",
@@ -806,6 +848,7 @@
             },
             {
                 subject: "性消",
+                rui: 1,
                 question: "【性消】過マンガン酸カリウムの外観として正しいものはどれか。",
                 choices: ["無色の液体", "白色の粉末", "黒紫色の結晶", "黄色の固体"],
                 answer: 2,
@@ -813,6 +856,7 @@
             },
             {
                 subject: "性消",
+                rui: 2,
                 question: "【性消】五硫化りんが水と作用して発生する有毒ガスはどれか。",
                 choices: ["二酸化硫黄", "硫化水素", "ホスフィン", "アセチレン"],
                 answer: 1,
@@ -820,6 +864,7 @@
             },
             {
                 subject: "性消",
+                rui: 2,
                 question: "【性消】固形アルコールは第何類の危険物か。",
                 choices: ["第1類", "第2類", "第4類", "第5類"],
                 answer: 1,
@@ -827,6 +872,7 @@
             },
             {
                 subject: "性消",
+                rui: 2,
                 question: "【性消】アルミニウム粉について正しいものはどれか。",
                 choices: [
                     "酸とは反応するが、アルカリとは反応しない",
@@ -839,6 +885,7 @@
             },
             {
                 subject: "性消",
+                rui: 3,
                 question: "【性消】カリウムが水と反応したときに発生するガスはどれか。",
                 choices: ["酸素", "水素", "窒素", "メタン"],
                 answer: 1,
@@ -846,6 +893,7 @@
             },
             {
                 subject: "性消",
+                rui: 3,
                 question: "【性消】アルキルアルミニウムの貯蔵方法として適切なものはどれか。",
                 choices: [
                     "水中に保存する",
@@ -858,6 +906,7 @@
             },
             {
                 subject: "性消",
+                rui: 3,
                 question: "【性消】りん化カルシウムが水と反応して発生するガスはどれか。",
                 choices: ["水素", "アセチレン", "りん化水素(ホスフィン)", "二酸化炭素"],
                 answer: 2,
@@ -865,6 +914,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】ガソリンの燃焼範囲として最も近いものはどれか。",
                 choices: ["約1.4〜7.6vol%", "約6〜36vol%", "約12〜74vol%", "約1.9〜36vol%"],
                 answer: 0,
@@ -872,6 +922,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】メタノールについて正しいものはどれか。",
                 choices: [
                     "水にほとんど溶けない",
@@ -884,6 +935,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】第2石油類の引火点の範囲として正しいものはどれか(1気圧において)。",
                 choices: ["21℃未満", "21℃以上70℃未満", "70℃以上200℃未満", "200℃以上250℃未満"],
                 answer: 1,
@@ -891,6 +943,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】特殊引火物の定義として正しいものはどれか(1気圧において)。",
                 choices: [
                     "引火点が21℃未満のもの",
@@ -903,6 +956,7 @@
             },
             {
                 subject: "性消",
+                rui: 4,
                 question: "【性消】動植物油類の自然発火について正しいものはどれか。",
                 choices: [
                     "ヨウ素価が大きい油ほど自然発火しやすい",
@@ -915,6 +969,7 @@
             },
             {
                 subject: "性消",
+                rui: 5,
                 question: "【性消】ニトロセルロースの貯蔵方法として適切なものはどれか。",
                 choices: [
                     "よく乾燥させて保存する",
@@ -927,6 +982,7 @@
             },
             {
                 subject: "性消",
+                rui: 5,
                 question: "【性消】ピクリン酸の取扱いとして適切なものはどれか。",
                 choices: [
                     "金属容器に保存する",
@@ -939,6 +995,7 @@
             },
             {
                 subject: "性消",
+                rui: 6,
                 question: "【性消】次のうち、第6類の危険物はどれか。",
                 choices: ["過塩素酸", "過塩素酸カリウム", "塩素酸ナトリウム", "過酸化ベンゾイル"],
                 answer: 0,
@@ -946,6 +1003,7 @@
             },
             {
                 subject: "性消",
+                rui: 6,
                 question: "【性消】濃硝酸と鉄・アルミニウムの関係について正しいものはどれか。",
                 choices: [
                     "激しく反応して溶かし続ける",
@@ -957,6 +1015,7 @@
                 explanation: "濃硝酸は鉄・アルミニウムなどの表面に緻密な酸化被膜(不動態)をつくるため、それ以上は侵されにくい。"
             },
         ];
+        
         let quizzes = allQuizzes;
         //今何問目か
         let current = 0;
@@ -982,7 +1041,7 @@
             return list.slice(0, count);
         }
         function startMode(mode) {
-            if (mode === "a11") {
+            if (mode === "all") {
                 quizzes = allQuizzes;
             } else if (mode === "exam") {
                 quizzes = pickRandom("法令", 15).concat(
@@ -994,22 +1053,43 @@
                     return quiz.subject === mode;
                 })
             }
+            
             current = 0;
             score = 0;
             isExam = (mode === "exam");
-            correctBySubject = { "法令": 0, "物化": 0, "性消": 0 };
+            correctBySubject = {"法令": 0, "物化": 0, "性消": 0};
             wrongQuizzes = [];
             shuffle(quizzes);
             document.getElementById("modes").style.display = "none";
             document.getElementById("quiz-screen").style.display = "block";
             document.getElementById("exam-intro").style.display = "none";
+            document.getElementById("rui-select").style.display = "none";
             updateScore();
             showQuiz();
         }
+        function startRui(rui) {
+                quizzes = allQuizzes.filter(function (quiz) {
+                    return quiz.subject === "性消" && quiz.rui === rui;
+                });
+            current = 0;
+            score = 0;
+            isExam = false;
+            correctBySubject = {"法令": 0, "物化": 0, "性消": 0};
+            wrongQuizzes = [];
+            shuffle(quizzes);
+            document.getElementById("modes").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "block";
+            document.getElementById("exam-intro").style.display = "none";
+            document.getElementById("rui-select").style.display = "none";
+            updateScore();
+            showQuiz();
+        }
+       
         function backToMenu() {
             document.getElementById("modes").style.display = "block";
             document.getElementById("quiz-screen").style.display = "none";
             document.getElementById("exam-intro").style.display = "none";
+            document.getElementById("rui-select").style.display = "none";
         }
         // 正解数の表示を更新する
         function updateScore() {
@@ -1025,7 +1105,14 @@
 
             const choicesDiv = document.getElementById("choices");
             choicesDiv.innerHTML = "";
+            const order = [];
             for (let i = 0; i < quiz.choices.length; i++) {
+                order.push(i);
+            }
+            shuffle(order);
+
+            for (let k = 0; k < order.length; k++) {
+                const i = order[k];
                 const button = document.createElement("button");
                 button.textContent = quiz.choices[i];
                 button.onclick = function () {
@@ -1074,6 +1161,7 @@
             document.getElementById("modes").style, display = "none";
             document.getElementById("quiz-screen").style.display = "none";
             document.getElementById("exam-intro").style.display = "block";
+            document.getElementById("rui-select").style.display = "none";
 
             const saved = localStorage.getItem("lastExam");
             const lastResult = document.getElementById("last-result");
@@ -1082,6 +1170,12 @@
             } else {
                 lastResult.innerHTML = "<p>まだ受験記録はありません</p>";
             }
+        }
+        function　showRuiSelect() {
+            document.getElementById("modes").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("exam-intro").style.display = "none";
+            document.getElementById("rui-select").style.display = "block";
         }
         function showExamResult() {
             const subjects = ["法令", "物化", "性消"];
