@@ -164,11 +164,42 @@
         .review p {
             white-space: pre-wrap;
         }
+        #set-size {
+            width: 100%;
+            padding: 10px;
+            font-size:16px;
+            border: 2px solid #e8590c;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        #progress {
+            text-align: right;
+            color: #e8590c;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        #set-end-score {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #set-end-progress {
+            text-align: center;
+            color: #e8590c;
+            font-weight: bold;
+        }
     </style>
 </head>
 
 <body>
     <h1>危険物一問一答</h1>
+
+    <label  for="select-size">一回の出題数</label>
+    <select id="set-size" onchange="localStorage.setItem(`setSize`, this.value)">
+        <option value="all">全問</option>
+        <option value="5">5問ずつ</option>
+        <option value="10">10問ずつ</option>
+    </select>
 
     <div id="modes">
         <button onclick="startMode('all')">全科目</button>
@@ -269,6 +300,7 @@
     </div>
 
     <div id="quiz-screen">
+        <p id="progress"></p>
         <p id="score"></p>
         <p id="question"></p>
         <div id="choices"></div>
@@ -278,6 +310,14 @@
             <button onclick="next()">次の問題</button>
             <button onclick="backToMenu()">モード選択</button>
         </div>
+    </div>
+    <div id="set-end">
+        <h2>セット終了</h2>
+        <p id="set-end-score"></p>
+        <p id="set-end-progress"></p>
+        <div id="set-end-wrongs"></div>
+        <button id="set-continue" onclick="continueSet()">続ける</button>
+        <button onclick="backToMenu()">モード選択に戻る</button>
     </div>
 
     <script>
@@ -1969,6 +2009,9 @@
         let wrongQuizzes = [];
         let examKey = "lastExam";
         let examTitle = "甲種"
+        let setInfo = null;
+        let progressText = "";
+        let remainingCount = 0;
         //問題を画面に表示する
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -1993,6 +2036,122 @@
             return list.slice(0, count);
         }
 
+        function getSetSize() {
+            const value = document.getElementById("set-size").value;
+            if (value === "all") {
+                return 0;
+            }
+            return Number(value);
+        }
+
+        function getPool(info) {
+            if (info.mode === "all") {
+                return allQuizzes;
+            }
+            return allQuizzes.filter(function (quiz) {
+                if (info.rui) {
+                    return quiz.subject === "性消" && quiz.rui === info.rui;
+                }
+                return quiz.subject === info.mode;
+            });
+        }
+
+        function takeFromDeck(info, size) {
+            const pool = getPool(info);
+            const deckKey = "deck-" + info.key;
+            const roundKey = "round-" + info.key;
+
+            let deck = JSON.parse(localStorage.getItem(deckKey) || "[]");
+            let round = Number(localStorage.getItem(roundKey) || "1");
+
+            deck = deck.filter(function (text) {
+                return pool.some(function (q) {
+                    return q.question === text;
+                });
+            });
+
+            if (deck.length === 0) {
+                if (localStorage.getItem(deckKey) !== null) {
+                    round++;
+                }
+                deck = pool.map(function (q) {
+                    return q.question;
+                });
+                shuffle(deck);
+            }
+
+            const taken =deck.slice(0, size);
+            const rest = deck.slice(size);
+            localStorage.setItem(deckKey, JSON.stringify(rest));
+            localStorage.setItem(roundKey, String(round));
+
+            remainingCount = rest.length;
+            progressText = round + "周目あと" + rest.length + "問(全" + pool.length + "問)";
+
+            return taken.map(function (text) {
+                return pool.find(function (q) {
+                    return q.question === text;
+                });
+            });
+        }
+
+        function startSet(info, size) {
+            setInfo = info;
+            quizzes = takeFromDeck(info, size);
+            if (quizzes.length === 0) {
+                alert("この範囲には問題がありません");
+                backToMenu();
+                return;
+            }
+            isExam = false;
+            beginQuiz();
+        }
+        function showSetEnd() {
+            showScreen("set-end");
+
+            document.getElementById("set-end-score").textContent = 
+                "正解数" + score + "/" +quizzes.length;
+
+            const progress = document.getElementById("set-end-progress");
+            if (remainingCount === 0) {
+                progress.textContent = "🎉 1周終わりました！次は新しい周が始まります";
+            } else {
+                progress.textContent = progressText;
+            }
+
+            const continueButton = document.getElementById("set-continue");
+            continueButton.textContent = "続ける(次の" + getSetSize() + "問)";
+
+            const box = document.getElementById("set-end-wrongs");
+            box.innerHTML = "";
+            if (wrongQuizzes.length === 0) {
+                box.textContent = "全問正解です";
+                return;
+            }
+            for (let i = 0; i < wrongQuizzes.length; i++) {
+                const q = wrongQuizzes[i];
+                const item =document.createElement("div");
+                item.className = "review";
+
+                const question = document.createElement("p");
+                question.textContent = q.question;
+                const answer = document.createElement("p");
+                answer.textContent = "正解:" + q.choices[q.answer];
+                const explanation = document.createElement("p");
+                explanation.textContent = q.explanation;
+
+                item.appendChild(question);
+                item.appendChild(answer);
+                item.appendChild(explanation);
+                box.appendChild(item);
+            }
+        }
+
+        function continueSet() {
+            startSet(setInfo, getSetSize());
+        }
+
+
         function beginQuiz() {
             current = 0;
             score = 0;
@@ -2000,11 +2159,14 @@
             wrongQuizzes = [];
             shuffle(quizzes);
             showScreen("quiz-screen");
+            document.getElementById("progress").textContent = progressText;
             updateScore();
             showQuiz();
         }
 
         function startOtsuExam(rui) {
+            setInfo = null;
+            progressText = "";
             quizzes = pickRandom("法令", 15).concat(
                 pickRandom("物化", 10),
                 pickRandomRui(rui, 10)
@@ -2015,6 +2177,13 @@
             beginQuiz();
         }
         function startMode(mode) {
+            setInfo = null;
+            progressText = "";
+            const size = getSetSize();
+            if (size > 0 && mode !== "exam") {
+                startSet({ key:mode, mode: mode }, size);
+                return;
+            }
             if (mode === "all") {
                 quizzes = allQuizzes;
             } else if (mode === "exam") {
@@ -2034,6 +2203,13 @@
         }
 
         function startRui(rui) {
+            setInfo = null;
+            progressText = "";
+            const size = getSetSize();
+            if (size > 0) {
+                startSet({ key: "rui" + rui, mode: "性消", rui: rui }, size);
+                return;
+            }
             quizzes = allQuizzes.filter(function (quiz) {
                 return quiz.subject === "性消" && quiz.rui === rui;
             });
@@ -2043,7 +2219,7 @@
         }
 
         function showScreen(id) {
-            const screens = ["modes", "quiz-screen", "exam-intro", "rui-select", "add-screen", "my-list"];
+            const screens = ["modes", "quiz-screen", "exam-intro", "rui-select", "add-screen", "my-list", "set-end"];
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i] === id) {
                     document.getElementById(screens[i]).style.display = "block";
@@ -2278,6 +2454,10 @@
                     showExamResult();
                     return;
                 }
+                if (setInfo) {
+                    showSetEnd();
+                    return;
+                }
                 current = 0;
                 score = 0;
                 shuffle(quizzes);
@@ -2285,6 +2465,8 @@
             showQuiz();
         }
         //モード選択から始動
+        document.getElementById("set-size").value = localStorage.getItem("setSize") || "all";
+
         backToMenu();
         function showExamIntro() {
             showScreen("exam-intro");
