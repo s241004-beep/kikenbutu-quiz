@@ -9,18 +9,42 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>危険物取扱者</title>
     <style>
+        :root {
+            --bg: #f7f5f0;
+            --card: white;
+            --text: #333;
+            --sub: #888;
+            --accent: #e8590c;
+            --hover: #fff0e6;
+            --note: #fff9db;
+            --gray: #eee;
+            --line: #ccc;
+        }
+
+        body.dark {
+            --bg: #1e1e1e;
+            --card: #2b2b2b;
+            --text: #e8e8e8;
+            --sub: #aaa;
+            --accent: #ff7a2e;
+            --hover: #3d2a1f;
+            --note: #3a3520;
+            --gray: #3a3a3a;
+            --line: #555;
+        }
+
         body {
             font-family: sans-serif;
             max-width: 600px;
             margin: 0 auto;
             padding: 16px;
-            background-color: #f7f5f0;
-            color: #333;
+            background-color: var(--bg);
+            color: var(--text);
         }
 
         h1 {
-            background-color: #e8590c;
-            color: whitr;
+            background-color: var(--accent);
+            color: white;
             text-align: center;
             font-size: 22px;
             padding: 12px;
@@ -33,18 +57,19 @@
             padding: 14px;
             margin: 8px 0;
             font-size: 16px;
-            background-color: white;
-            border: 2px solid #e8590c;
+            background-color: var(--card);
+            border: 2px solid var(--accent);
             border-radius: 10px;
             cursor: pointer;
+            color: var(--text);
         }
 
         button:hover {
-            background-color: fff0e6;
+            background-color: var(--hover);
         }
 
         #question {
-            background-color: white;
+            background-color: var(--card);
             padding: 16px;
             border-radius: 12px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -54,7 +79,7 @@
 
         #score {
             text-align: right;
-            color: #888;
+            color: var(--sub);
         }
 
         #result {
@@ -63,7 +88,7 @@
         }
 
         #explanation {
-            background-color: #fff9db;
+            background-color: var(--note);
             border-left: 4px solid #f59f00;
             padding: 12px;
             border-radius: 6px;
@@ -79,12 +104,12 @@
         }
 
         #controls button {
-            background-color: #ddd;
+            background-color: var(--gray);
             font-size: 14px;
         }
 
         .review {
-            background-color: white;
+            background-color: var(--card);
             border-left: 4px solid #e03131;
             padding: 8px 12px;
             margin: 12px 0;
@@ -93,7 +118,7 @@
         }
 
         details {
-            background-color: white;
+            background-color: var(--card);
             border-radius: 8px;
             padding: 8px 12px;
             margin: 8px 0;
@@ -106,7 +131,7 @@
 
         #exam-button,
         #exam-start {
-            background-color: #e8590c;
+            background-color: var(--accent);
             color: white;
             font-weight: bold;
             font-size: 18px;
@@ -119,7 +144,7 @@
         }
 
         .exam-info {
-            background-color: white;
+            background-color: var(--card);
             border-radius: 10px;
             padding: 12px 16px;
             line-height: 1.6;
@@ -141,6 +166,9 @@
             font-size: 16px;
             border-radius: 8px;
             margin-top: 4px;
+            border: 2px solid var(--line);
+            background-color: var(--card);
+            color: var(--text);
         }
 
         #my-list-items button {
@@ -160,33 +188,58 @@
         #otsu-buttons button {
             margin: 0;
         }
+
         #question,
         .review p {
             white-space: pre-wrap;
         }
+
         #set-size {
             width: 100%;
             padding: 10px;
-            font-size:16px;
-            border: 2px solid #e8590c;
+            font-size: 16px;
+            border: 2px solid var(--accent);
             border-radius: 8px;
             margin-bottom: 8px;
+            background-color: var(--card);
+            color: var(--text);
         }
+
         #progress {
             text-align: right;
-            color: #e8590c;
+            color: var(--accent);
             font-weight: bold;
             margin-bottom: 0;
         }
+
         #set-end-score {
             font-size: 24px;
             font-weight: bold;
             text-align: center;
         }
+
         #set-end-progress {
             text-align: center;
-            color: #e8590c;
+            color: var(--accent);
             font-weight: bold;
+        }
+
+        #reset-button {
+            background-color: var(--gray);
+            border-color: var(--line);
+            font-size: 14px;
+            margin-top: 24px;
+        }
+        #bookmark-button {
+            display: block;
+            width:auto;
+            margin: 0 0 0 auto;
+            padding: 6px 14px;
+            font-size: 14px;
+        }
+        #bookmark-button.on {
+            background-color: var(--accent);
+            color: white;
         }
     </style>
 </head>
@@ -194,20 +247,33 @@
 <body>
     <h1>危険物一問一答</h1>
 
-    <label  for="select-size">一回の出題数</label>
-    <select id="set-size" onchange="localStorage.setItem(`setSize`, this.value)">
-        <option value="all">全問</option>
-        <option value="5">5問ずつ</option>
-        <option value="10">10問ずつ</option>
-    </select>
 
     <div id="modes">
+        <label for="select-size">一回の出題数</label>
+        <select id="set-size" onchange="localStorage.setItem(`setSize`, this.value)">
+            <option value="all">全問</option>
+            <option value="5">5問ずつ</option>
+            <option value="10">10問ずつ</option>
+        </select>
         <button onclick="startMode('all')">全科目</button>
         <button onclick="startMode('法令')">法令</button>
         <button onclick="startMode('物化')">物化</button>
         <button onclick="showRuiSelect()">性消</button>
         <button id="exam-button" onclick="showExamIntro()">📝 模擬試験(甲種・乙種対応)</button>
         <button onclick="showScreen(`add-screen`)">問題を追加</button>
+        <button onclick="startBookmarks()">★ ブックマークした問題</button>
+        <button onclick="showScreen(`setting`)">⚙️ 設定</button>
+    </div>
+    <div id="setting">
+        <h2>設定</h2>
+
+        <h3>表示</h3>
+        <button id="dark-button" onclick="toggleDark()">🌙 ダークモード</button>
+
+        <h3>データ</h3>
+         <button id="reset-button" onclick="resetDecks()">🔄 〇問ずつの進み具合をリセット</button>
+
+        <button onclick="backToMenu()">戻る</button>
     </div>
     <div id="my-list">
         <h2>自作の問題一覧</h2>
@@ -245,6 +311,7 @@
         <input type="text" id="add-choice1" placeholder="選択肢2">
         <input type="text" id="add-choice2" placeholder="選択肢3">
         <input type="text" id="add-choice3" placeholder="選択肢4">
+        <input type="text" id="add-choice4" placeholder="選択肢5">
 
         <label>正解</label>
         <select id="add-answer">
@@ -252,6 +319,7 @@
             <option value="1">選択肢2</option>
             <option value="2">選択肢3</option>
             <option value="3">選択肢4</option>
+            <option value="4">選択肢5</option>
         </select>
 
         <label>解説</label>
@@ -302,6 +370,7 @@
     <div id="quiz-screen">
         <p id="progress"></p>
         <p id="score"></p>
+        <button id="bookmark-button" onclick="toggleBookmark()">☆ ブックマーク</button>
         <p id="question"></p>
         <div id="choices"></div>
         <p id="result"></p>
@@ -1989,6 +2058,533 @@
                 noShuffle: true,
                 explanation: "第6類は不燃性の液体で、無機化合物(Bは誤り)。液比重は1より大きい(Dは誤り)。過塩素酸やハロゲン間化合物は水と激しく反応して発熱する。"
             },
+            // ===== 追加問題 第5弾(法令25問・物化20問、5択) =====
+            // ---- 法令(25問) ----
+            {
+                subject: "法令",
+                question: "【法令】法令上、製造所等の設置の完成検査について、次のうち正しいものはどれか。",
+                choices: [
+                    "完成検査は、所轄消防署長が行う。",
+                    "完成検査を受ける前でも、市町村長等の承認を受ければ、製造所等の全体を使用することができる。",
+                    "設置の工事が完了したときは、市町村長等が行う完成検査を受け、技術上の基準に適合していると認められた後でなければ使用することができない。",
+                    "完成検査済証を亡失した場合、再交付を受けることはできない。",
+                    "完成検査は、危険物保安監督者が行う。"
+                ],
+                answer: 2,
+                explanation: "完成検査は市町村長等が行い、適合と認められて完成検査済証が交付された後でなければ使用できない。仮使用は変更工事のときに、工事に関係ない部分を使う制度。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、危険物施設保安員について、次のうち誤っているものはどれか。",
+                choices: [
+                    "製造所等の所有者等が選任する。",
+                    "危険物保安監督者が置かれている製造所等では、危険物保安監督者の指示に従って保安の業務を行う。",
+                    "危険物施設保安員になるには、危険物取扱者の資格が必要である。",
+                    "製造所等の構造や設備の点検を行う。",
+                    "選任・解任について、市町村長等への届出の義務はない。"
+                ],
+                answer: 2,
+                explanation: "危険物施設保安員には、危険物取扱者の資格は必要ない。選任・解任の届出も不要。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、次の文の【A】〜【C】に当てはまる語句の組合せとして、正しいものはどれか。\n「危険物保安統括管理者は【A】、危険物保安監督者は【B】、危険物施設保安員は【C】。」",
+                choices: [
+                    "A:資格は不要  B:甲種または乙種の免状が必要  C:資格は不要",
+                    "A:甲種の免状が必要  B:甲種または乙種の免状が必要  C:資格は不要",
+                    "A:資格は不要  B:免状の種類を問わず必要  C:丙種以上の免状が必要",
+                    "A:甲種の免状が必要  B:甲種の免状が必要  C:乙種以上の免状が必要",
+                    "A:資格は不要  B:資格は不要  C:資格は不要"
+                ],
+                answer: 0,
+                noShuffle: true,
+                explanation: "危険物取扱者の免状が必要なのは危険物保安監督者だけ(甲種または乙種で、6か月以上の実務経験)。保安統括管理者と施設保安員には資格は不要。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、指定数量の倍数にかかわらず、予防規程を定めなければならない製造所等はどれか。",
+                choices: ["屋内貯蔵所", "給油取扱所", "屋外タンク貯蔵所", "地下タンク貯蔵所", "販売取扱所"],
+                answer: 1,
+                explanation: "給油取扱所と移送取扱所は、指定数量の倍数に関係なく予防規程が必要。製造所などは指定数量の倍数によって必要かどうかが決まる。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、定期点検を実施しなければならない製造所等に該当しないものはどれか。",
+                choices: [
+                    "地下タンク貯蔵所",
+                    "移動タンク貯蔵所",
+                    "屋内タンク貯蔵所",
+                    "移送取扱所",
+                    "地下タンクを有する給油取扱所"
+                ],
+                answer: 2,
+                explanation: "屋内タンク貯蔵所、簡易タンク貯蔵所、販売取扱所は、定期点検の対象外。地下タンク貯蔵所・移動タンク貯蔵所・移送取扱所・地下タンクを有する給油取扱所は、倍数にかかわらず対象。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、第1種販売取扱所で取り扱うことができる危険物の量として、正しいものはどれか。",
+                choices: [
+                    "指定数量の倍数が5以下",
+                    "指定数量の倍数が10以下",
+                    "指定数量の倍数が15以下",
+                    "指定数量の倍数が15を超え40以下",
+                    "指定数量の倍数が40を超え100以下"
+                ],
+                answer: 2,
+                noShuffle: true,
+                explanation: "第1種販売取扱所は指定数量の15倍以下、第2種販売取扱所は15倍を超え40倍以下。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、給油取扱所における危険物の取扱いの基準として、次のうち誤っているものはどれか。",
+                choices: [
+                    "自動車等に給油するときは、固定給油設備を使用して直接給油する。",
+                    "自動車等に給油するときは、自動車等の原動機を停止させる。",
+                    "自動車等の一部または全部が給油空地からはみ出たままで給油しない。",
+                    "専用タンクに危険物を注入するときは、そのタンクに接続する固定給油設備の使用を中止する。",
+                    "自動車等を洗浄するときは、引火点を有する液体の洗剤を使用することができる。"
+                ],
+                answer: 4,
+                explanation: "自動車等の洗浄に、引火点を有する液体の洗剤を使用してはならない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、移動タンク貯蔵所の常置場所として、正しいものはどれか。",
+                choices: [
+                    "屋外の場合は、防火上安全な場所",
+                    "屋内の場合は、建築物の2階以上",
+                    "道路上であれば、どこでもよい",
+                    "屋内の場合は、木造の車庫でもよい",
+                    "常置場所を定める必要はない"
+                ],
+                answer: 0,
+                explanation: "屋外なら防火上安全な場所、屋内なら壁・床・はり・屋根を耐火構造または不燃材料で造った建築物の1階に常置する。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、移動貯蔵タンクの構造について、次のうち正しいものはどれか。",
+                choices: [
+                    "容量は20,000L以下とし、内部に2,000L以下ごとに間仕切りを設ける。",
+                    "容量は30,000L以下とし、内部に4,000L以下ごとに間仕切りを設ける。",
+                    "容量は30,000L以下とし、間仕切りは設けなくてよい。",
+                    "容量は50,000L以下とし、内部に5,000L以下ごとに間仕切りを設ける。",
+                    "容量の制限はない。"
+                ],
+                answer: 1,
+                noShuffle: true,
+                explanation: "移動貯蔵タンクの容量は30,000L以下で、内部に4,000L以下ごとに完全な間仕切りを設ける。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、屋外貯蔵所で貯蔵することができない危険物はどれか。",
+                choices: ["灯油", "重油", "エタノール", "ガソリン", "硫黄"],
+                answer: 3,
+                explanation: "屋外貯蔵所で貯蔵できる第4類は、引火点0℃以上の第1石油類、アルコール類、第2〜第4石油類、動植物油類など。ガソリン(引火点−40℃以下)は貯蔵できない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、屋内貯蔵所の貯蔵倉庫の構造について、次のうち正しいものはどれか。",
+                choices: [
+                    "地盤面から軒までの高さが6m未満の平家建とする。",
+                    "床面積は3,000㎡以下とする。",
+                    "2階建て以上としなければならない。",
+                    "床は地盤面より低くする。",
+                    "窓を設けてはならない。"
+                ],
+                answer: 0,
+                explanation: "貯蔵倉庫は、軒高6m未満の平家建とし、床面積は1,000㎡以下。床は地盤面以上にする。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、消火設備の区分とその消火設備の組合せとして、次のうち誤っているものはどれか。",
+                choices: [
+                    "第1種 …… 屋内消火栓設備",
+                    "第2種 …… スプリンクラー設備",
+                    "第3種 …… 泡消火設備",
+                    "第4種 …… 大型消火器",
+                    "第5種 …… 水噴霧消火設備"
+                ],
+                answer: 4,
+                explanation: "水噴霧消火設備は第3種。第5種は小型消火器、乾燥砂、膨張ひる石、水バケツなど。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、指定数量の10倍以上の危険物を貯蔵し、または取り扱う製造所等に設ける警報設備に該当しないものはどれか。",
+                choices: [
+                    "自動火災報知設備",
+                    "消防機関に報知ができる電話",
+                    "非常ベル装置",
+                    "拡声装置",
+                    "誘導灯"
+                ],
+                answer: 4,
+                explanation: "警報設備は、自動火災報知設備、消防機関に報知ができる電話、非常ベル装置、拡声装置、警鐘の5種類。誘導灯は避難設備。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、製造所等に設ける掲示板の注意事項と色の組合せとして、次のうち誤っているものはどれか。",
+                choices: [
+                    "火気厳禁 …… 赤地に白文字",
+                    "火気注意 …… 赤地に白文字",
+                    "禁水 …… 赤地に白文字",
+                    "製造所等である旨の標識 …… 白地に黒文字",
+                    "移動タンク貯蔵所の標識 …… 黒地に黄色の反射塗料などで「危」"
+                ],
+                answer: 2,
+                explanation: "「禁水」の掲示板は青地に白文字。「火気厳禁」「火気注意」は赤地に白文字。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、貯蔵する危険物と、掲示板に表示する注意事項の組合せとして、次のうち誤っているものはどれか。",
+                choices: [
+                    "第4類の危険物 …… 火気厳禁",
+                    "第5類の危険物 …… 火気厳禁",
+                    "第2類の引火性固体 …… 火気厳禁",
+                    "第1類のアルカリ金属の過酸化物 …… 禁水",
+                    "第6類の危険物 …… 火気厳禁"
+                ],
+                answer: 4,
+                explanation: "第6類の危険物には、掲示板による注意事項の表示は定められていない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、指定数量の10分の1を超える危険物を運搬する場合に、混載が禁止されている組合せはどれか。",
+                choices: [
+                    "第1類と第6類",
+                    "第2類と第4類",
+                    "第3類と第4類",
+                    "第4類と第5類",
+                    "第1類と第4類"
+                ],
+                answer: 4,
+                explanation: "混載できるのは、第1類と第6類、第2類と第4類・第5類、第3類と第4類、第4類と第2類・第3類・第5類など。第1類と第4類は混載できない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、製造所等に関する手続きについて、次のA〜Dのうち、正しいものの組合せはどれか。\nA 製造所等の用途を廃止したときは、遅滞なく市町村長等に届け出なければならない。\nB 製造所等を譲り受けたときは、30日以内に市町村長等に届け出なければならない。\nC 危険物保安統括管理者を選任したときは、遅滞なく市町村長等に届け出なければならない。\nD 予防規程を変更したときは、市町村長等に届け出るだけでよい。",
+                choices: ["AとB", "AとC", "BとC", "BとD", "CとD"],
+                answer: 1,
+                noShuffle: true,
+                explanation: "Bは誤り:譲渡・引渡しの届出は「遅滞なく」。Dは誤り:予防規程は、定めるときも変更するときも市町村長等の認可が必要。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】同一の場所に、アセトン2,000L、軽油3,000L、ギヤー油12,000Lを貯蔵する場合、指定数量の倍数の合計として、次のうち正しいものはどれか。",
+                choices: ["6", "8", "10", "12", "15"],
+                answer: 2,
+                noShuffle: true,
+                explanation: "アセトン(第1石油類・水溶性)2,000÷400=5、軽油3,000÷1,000=3、ギヤー油(第4石油類)12,000÷6,000=2。合計5+3+2=10。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】消防法上の危険物に該当しないものはどれか。",
+                choices: ["ガソリン", "硫黄", "プロパン", "過酸化水素", "黄りん"],
+                answer: 2,
+                explanation: "消防法上の危険物は、常温(20℃)で固体または液体のもの。プロパンは常温で気体なので、消防法上の危険物には該当しない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、移動タンク貯蔵所に備え付けておかなくてもよい書類はどれか。",
+                choices: [
+                    "完成検査済証",
+                    "定期点検の点検記録",
+                    "譲渡・引渡しの届出書",
+                    "品名・数量または指定数量の倍数の変更の届出書",
+                    "危険物保安監督者の選任の届出書"
+                ],
+                answer: 4,
+                explanation: "移動タンク貯蔵所に備え付ける書類は、完成検査済証、定期点検記録、譲渡・引渡しの届出書、品名・数量等の変更の届出書。移動タンク貯蔵所には危険物保安監督者の選任義務もない。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、危険物保安監督者を選任しなくてもよい製造所等はどれか。",
+                choices: ["製造所", "屋外タンク貯蔵所", "給油取扱所", "移送取扱所", "移動タンク貯蔵所"],
+                answer: 4,
+                explanation: "製造所、屋外タンク貯蔵所、給油取扱所、移送取扱所は、危険物の量にかかわらず危険物保安監督者が必要。移動タンク貯蔵所は不要。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】市町村の火災予防条例により、貯蔵または取扱いの届出が必要となる「少量危険物」の量として、正しいものはどれか。",
+                choices: [
+                    "指定数量の10分の1以上、指定数量未満",
+                    "指定数量の5分の1以上、指定数量未満",
+                    "指定数量の2分の1以上、指定数量未満",
+                    "指定数量以上、指定数量の5倍未満",
+                    "量にかかわらず届出は必要ない"
+                ],
+                answer: 1,
+                noShuffle: true,
+                explanation: "指定数量の5分の1以上、指定数量未満の危険物は「少量危険物」として、市町村条例により所轄消防長などへの届出が必要。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、次の文の【A】〜【C】に当てはまる語句の組合せとして、正しいものはどれか。\n「甲種危険物取扱者は【A】、乙種危険物取扱者は【B】、丙種危険物取扱者は【C】の危険物を取り扱うことができる。」",
+                choices: [
+                    "A:すべての類  B:免状に指定された類  C:第4類のうち指定されたもの",
+                    "A:すべての類  B:すべての類  C:第4類のすべて",
+                    "A:第4類  B:免状に指定された類  C:第4類のうち指定されたもの",
+                    "A:すべての類  B:第4類のみ  C:第4類のうち指定されたもの",
+                    "A:すべての類  B:免状に指定された類  C:すべての類"
+                ],
+                answer: 0,
+                noShuffle: true,
+                explanation: "甲種はすべての類、乙種は免状に指定された類、丙種は第4類のうちガソリン・灯油・軽油・重油など指定されたものを取り扱える。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、次の製造所等のうち、「貯蔵所」に該当しないものはどれか。",
+                choices: ["屋内貯蔵所", "簡易タンク貯蔵所", "移動タンク貯蔵所", "屋外貯蔵所", "販売取扱所"],
+                answer: 4,
+                explanation: "販売取扱所は「取扱所」。取扱所には、給油取扱所、販売取扱所、移送取扱所、一般取扱所がある。"
+            },
+            {
+                subject: "法令",
+                question: "【法令】法令上、屋内タンク貯蔵所の屋内貯蔵タンクの容量として、正しいものはどれか(第4石油類・動植物油類以外の第4類を除く)。",
+                choices: [
+                    "指定数量の10倍以下",
+                    "指定数量の20倍以下",
+                    "指定数量の40倍以下",
+                    "指定数量の100倍以下",
+                    "容量の制限はない"
+                ],
+                answer: 2,
+                noShuffle: true,
+                explanation: "屋内貯蔵タンクの容量は指定数量の40倍以下。第4石油類・動植物油類以外の第4類は、さらに20,000L以下とされる。"
+            },
+
+            // ---- 物理学及び化学(20問) ----
+            {
+                subject: "物化",
+                question: "【物化】液体の蒸気圧について、次のうち誤っているものはどれか。",
+                choices: [
+                    "温度が上がると、飽和蒸気圧は小さくなる。",
+                    "飽和蒸気圧が外圧と等しくなる温度が沸点である。",
+                    "飽和蒸気圧が大きい液体ほど、蒸発しやすい。",
+                    "外圧が低いほど、沸点は低くなる。",
+                    "飽和蒸気圧は、物質ごとに温度によって決まる。"
+                ],
+                answer: 0,
+                explanation: "温度が上がるほど、液体の飽和蒸気圧は大きくなる。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】通常、蒸発燃焼するものはどれか。",
+                choices: ["木炭", "木材", "硫黄", "セルロイド", "紙"],
+                answer: 2,
+                explanation: "硫黄は加熱されると融けて蒸発し、その蒸気が燃える蒸発燃焼。木炭は表面燃焼、木材・紙は分解燃焼、セルロイドは内部(自己)燃焼。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】自然発火の原因となる熱と物質の組合せとして、次のうち誤っているものはどれか。",
+                choices: [
+                    "乾性油 …… 酸化熱",
+                    "石炭 …… 酸化熱",
+                    "活性炭 …… 分解熱",
+                    "ニトロセルロース …… 分解熱",
+                    "干し草 …… 発酵熱"
+                ],
+                answer: 2,
+                explanation: "活性炭は、気体を吸着するときに出る吸着熱が原因で自然発火することがある。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】粉じん爆発について、次のうち誤っているものはどれか。",
+                choices: [
+                    "可燃性の粉じんが空気中に浮遊しているときに起こる。",
+                    "粒子が細かいほど、爆発しやすい。",
+                    "ガス爆発に比べて、最小着火エネルギーが小さい。",
+                    "不完全燃焼を起こしやすく、一酸化炭素が発生しやすい。",
+                    "最初の爆発で堆積した粉じんが舞い上がり、連続して爆発することがある。"
+                ],
+                answer: 2,
+                explanation: "粉じん爆発は、ガス爆発に比べて最小着火エネルギーが大きい(着火しにくい)が、起きると被害が大きくなりやすい。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】次のうち、除去消火にあたるものはどれか。",
+                choices: [
+                    "燃えている物に水をかける。",
+                    "燃えている物を濡れた布で覆う。",
+                    "ガスこんろの元栓を閉めて火を消す。",
+                    "ハロゲン化物消火剤を放射する。",
+                    "燃えている油を泡で覆う。"
+                ],
+                answer: 2,
+                explanation: "元栓を閉めて可燃物(ガス)の供給を断つのは除去消火。水は冷却、布や泡で覆うのは窒息、ハロゲン化物は抑制(負触媒)消火。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】強化液消火剤について、次のうち誤っているものはどれか。",
+                choices: [
+                    "炭酸カリウムの濃厚な水溶液である。",
+                    "凝固点が高く、寒冷地では使用できない。",
+                    "霧状に放射すれば、油火災や電気火災にも適応する。",
+                    "棒状に放射すると、普通火災に適応する。",
+                    "消火後の再燃防止の効果がある。"
+                ],
+                answer: 1,
+                explanation: "強化液は凝固点が−20℃以下と低く、寒冷地でも使える。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】体膨張率が1.35×10⁻³ K⁻¹ のガソリン1,000Lの温度を20K上昇させたとき、体積の増加量として正しいものはどれか。",
+                choices: ["13.5L", "20L", "27L", "35L", "54L"],
+                answer: 2,
+                noShuffle: true,
+                explanation: "増加量 = 元の体積 × 体膨張率 × 温度変化 = 1,000 × 1.35×10⁻³ × 20 = 27L。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】同素体の組合せとして、次のうち誤っているものはどれか。",
+                choices: [
+                    "酸素 …… オゾン",
+                    "ダイヤモンド …… 黒鉛",
+                    "赤りん …… 黄りん",
+                    "斜方硫黄 …… 単斜硫黄",
+                    "水素 …… 重水素"
+                ],
+                answer: 4,
+                explanation: "水素と重水素は、陽子の数が同じで中性子の数が違う「同位体」。同素体は、同じ元素からなる性質の異なる単体。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】次のうち、還元が起きて金属が得られる反応はどれか。",
+                choices: [
+                    "銅を加熱すると、酸化銅(Ⅱ)になる。",
+                    "炭素が燃焼して、二酸化炭素になる。",
+                    "酸化銅(Ⅱ)を水素中で加熱すると、銅になる。",
+                    "鉄がさびて、酸化鉄になる。",
+                    "マグネシウムが燃焼して、酸化マグネシウムになる。"
+                ],
+                answer: 2,
+                explanation: "酸化銅(Ⅱ)が酸素を失って銅になるので、酸化銅(Ⅱ)は還元されている(水素は酸化されている)。ほかはすべて酸素と結びつく酸化。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】金属のイオン化傾向の大きい順に並べたものとして、正しいものはどれか。",
+                choices: [
+                    "K > Na > Zn > Cu",
+                    "Cu > Zn > Na > K",
+                    "Na > K > Cu > Zn",
+                    "Zn > K > Na > Cu",
+                    "K > Zn > Na > Cu"
+                ],
+                answer: 0,
+                noShuffle: true,
+                explanation: "イオン化傾向は K > Ca > Na > Mg > Al > Zn > Fe > Ni > Sn > Pb > (H) > Cu > Hg > Ag > Pt > Au の順。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】官能基とその構造の組合せとして、次のうち誤っているものはどれか。",
+                choices: [
+                    "ヒドロキシ基 …… −OH",
+                    "アルデヒド基 …… −COOH",
+                    "ニトロ基 …… −NO₂",
+                    "アミノ基 …… −NH₂",
+                    "スルホ基 …… −SO₃H"
+                ],
+                answer: 1,
+                explanation: "アルデヒド基は −CHO。−COOH はカルボキシ基。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】二酸化炭素88gの、0℃、1気圧における体積として正しいものはどれか。\nただし、原子量はC=12、O=16とし、0℃、1気圧での気体1molの体積は22.4Lとする。",
+                choices: ["11.2L", "22.4L", "44.8L", "67.2L", "88.0L"],
+                answer: 2,
+                noShuffle: true,
+                explanation: "CO₂の分子量は12+16×2=44。88÷44=2mol。2×22.4L=44.8L。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】水180gに塩化ナトリウム20gを溶かした水溶液の質量パーセント濃度として、正しいものはどれか。",
+                choices: ["9%", "10%", "11%", "18%", "20%"],
+                answer: 1,
+                noShuffle: true,
+                explanation: "質量パーセント濃度 = 溶質 ÷ 溶液全体 × 100 = 20 ÷ (180+20) × 100 = 10%。分母は水だけではなく溶液全体。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】二酸化炭素の性質について、次のうち誤っているものはどれか。",
+                choices: [
+                    "空気より重い。",
+                    "不燃性である。",
+                    "水に溶けると、弱いアルカリ性を示す。",
+                    "高濃度で吸い込むと、窒息のおそれがある。",
+                    "加圧すると液化しやすく、消火剤として容器に詰められる。"
+                ],
+                answer: 2,
+                explanation: "二酸化炭素は水に溶けると炭酸になり、弱い酸性を示す。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】20℃の水100gを70℃まで温めるのに必要な熱量として、正しいものはどれか。\nただし、水の比熱は4.2J/(g・K)とする。",
+                choices: ["4.2kJ", "8.4kJ", "21kJ", "29.4kJ", "42kJ"],
+                answer: 2,
+                noShuffle: true,
+                explanation: "熱量 = 質量 × 比熱 × 温度変化 = 100 × 4.2 × (70−20) = 21,000J = 21kJ。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】化学反応の速さについて、次のうち誤っているものはどれか。",
+                choices: [
+                    "一般に、温度が高いほど反応は速くなる。",
+                    "一般に、反応物の濃度が大きいほど反応は速くなる。",
+                    "固体は、粉末にして表面積を大きくすると反応が速くなる。",
+                    "触媒は、反応の前後で自身が変化し、反応熱を大きくする。",
+                    "触媒は、反応の速さを変えるが、反応の前後で自身は変化しない。"
+                ],
+                answer: 3,
+                explanation: "触媒は反応の前後で自身は変化せず、反応熱も変えない。反応の速さだけを変える。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】次の文の【A】〜【C】に当てはまる語句の組合せとして、正しいものはどれか。\n「可燃性液体の液面付近の蒸気濃度が、燃焼範囲の【A】に達するときの液温を【B】という。また、点火源がなくても空気中で自ら燃え出す最低の温度を【C】という。」",
+                choices: [
+                    "A:下限値  B:引火点  C:発火点",
+                    "A:上限値  B:引火点  C:発火点",
+                    "A:下限値  B:発火点  C:引火点",
+                    "A:上限値  B:沸点  C:発火点",
+                    "A:下限値  B:沸点  C:引火点"
+                ],
+                answer: 0,
+                noShuffle: true,
+                explanation: "蒸気濃度が燃焼範囲の下限値に達する液温が引火点。点火源なしで自ら燃え出す最低温度が発火点。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】液比重0.7のガソリン10Lの質量として、正しいものはどれか。",
+                choices: ["0.7kg", "7kg", "10kg", "14kg", "70kg"],
+                answer: 1,
+                noShuffle: true,
+                explanation: "水1Lは約1kg。液比重0.7なので、1Lあたり0.7kg。10L × 0.7kg = 7kg。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】燃焼範囲が1.4〜7.6vol%のガソリン蒸気と空気の混合気体で、燃焼範囲内にあるものはどれか。",
+                choices: [
+                    "ガソリン蒸気0.5Lと空気99.5L",
+                    "ガソリン蒸気1Lと空気99L",
+                    "ガソリン蒸気5Lと空気95L",
+                    "ガソリン蒸気8Lと空気92L",
+                    "ガソリン蒸気10Lと空気90L"
+                ],
+                answer: 2,
+                noShuffle: true,
+                explanation: "蒸気の濃度 = 蒸気 ÷ (蒸気+空気) × 100。0.5%、1%、5%、8%、10%となり、1.4〜7.6%の範囲内にあるのは5%だけ。"
+            },
+            {
+                subject: "物化",
+                question: "【物化】金属の一般的な性質について、次のうち誤っているものはどれか。",
+                choices: [
+                    "熱や電気をよく伝える。",
+                    "すべての金属は、常温(20℃)で固体である。",
+                    "比重が4程度以下のものを、軽金属という。",
+                    "粉末状にすると、燃えやすくなるものがある。",
+                    "展性や延性に富むものが多い。"
+                ],
+                answer: 1,
+                explanation: "水銀は常温で液体の金属。"
+            },
         ];
 
         let quizzes = allQuizzes;
@@ -2012,6 +2608,7 @@
         let setInfo = null;
         let progressText = "";
         let remainingCount = 0;
+        let bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
         //問題を画面に表示する
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -2080,7 +2677,7 @@
                 shuffle(deck);
             }
 
-            const taken =deck.slice(0, size);
+            const taken = deck.slice(0, size);
             const rest = deck.slice(size);
             localStorage.setItem(deckKey, JSON.stringify(rest));
             localStorage.setItem(roundKey, String(round));
@@ -2106,11 +2703,43 @@
             isExam = false;
             beginQuiz();
         }
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+            const isDark = document.body.classList.contains("dark");
+            localStorage.setItem("dark", isDark ? "1" : "0");
+            updateDarkButton();
+        }
+
+        function updateDarkButton() {
+            const isDark = document.body.classList.contains("dark");
+            document.getElementById("dark-button").textContent =
+                isDark ? "☀️ ライトモード" : "🌙 ダークモード";
+        }
+
+        function resetDecks() {
+            if (!confirm("〇問ずつモードの進み具合を、すべての範囲でリセットしますか？")) {
+                return;
+            }
+
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                keys.push(localStorage.key(i));
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+                if (keys[i].startsWith("deck-") || keys[i].startsWith("round-")) {
+                    localStorage.removeItem(keys[i]);
+                }
+            }
+
+            alert("リセットしました");
+        }
+
         function showSetEnd() {
             showScreen("set-end");
 
-            document.getElementById("set-end-score").textContent = 
-                "正解数" + score + "/" +quizzes.length;
+            document.getElementById("set-end-score").textContent =
+                "正解数" + score + "/" + quizzes.length;
 
             const progress = document.getElementById("set-end-progress");
             if (remainingCount === 0) {
@@ -2130,7 +2759,7 @@
             }
             for (let i = 0; i < wrongQuizzes.length; i++) {
                 const q = wrongQuizzes[i];
-                const item =document.createElement("div");
+                const item = document.createElement("div");
                 item.className = "review";
 
                 const question = document.createElement("p");
@@ -2181,7 +2810,7 @@
             progressText = "";
             const size = getSetSize();
             if (size > 0 && mode !== "exam") {
-                startSet({ key:mode, mode: mode }, size);
+                startSet({ key: mode, mode: mode }, size);
                 return;
             }
             if (mode === "all") {
@@ -2219,7 +2848,7 @@
         }
 
         function showScreen(id) {
-            const screens = ["modes", "quiz-screen", "exam-intro", "rui-select", "add-screen", "my-list", "set-end"];
+            const screens = ["modes", "quiz-screen", "exam-intro", "rui-select", "add-screen", "my-list", "set-end", "setting"];
             for (let i = 0; i < screens.length; i++) {
                 if (screens[i] === id) {
                     document.getElementById(screens[i]).style.display = "block";
@@ -2237,7 +2866,7 @@
         function clearAddForm() {
             document.getElementById("add-question").value = "";
             document.getElementById("add-explanation").value = "";
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 5; i++) {
                 document.getElementById("add-choice" + i).value = "";
             }
             document.getElementById("add-answer").value = 0;
@@ -2305,7 +2934,7 @@
             }
             document.getElementById("add-question").value =
                 q.question.replace("【" + q.subject + "】", "");
-            for (let j = 0; j < 4; j++) {
+            for (let j = 0; j < 5; j++) {
                 document.getElementById("add-choice" + j).value = q.choices[j];
             }
             document.getElementById("add-answer").value = q.answer;
@@ -2343,12 +2972,21 @@
             const message = document.getElementById("add-message");
 
             const choices = [];
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 5; i++) {
                 choices.push(document.getElementById("add-choice" + i).value.trim());
+            }
+            if (choices[4] === "") {
+                choices.pop();
             }
 
             if (question === "" || choices.includes("")) {
-                message.textContent = "問題文と選択肢4つをすべて入力してください";
+                message.textContent = "問題文と選択肢1~4をすべて入力してください";
+                message.style.color = "red";
+                return;
+            }
+
+            if (answer >= choices.length) {
+                message.textContent ="正解に選んだ選択肢が入力されていません";
                 message.style.color = "red";
                 return;
             }
@@ -2384,11 +3022,7 @@
             message.textContent = "保存しました(自作問題:" + myQuizzes.length + "問)";
             message.style.color = "green";
 
-            document.getElementById("add-question").value = "";
-            document.getElementById("add-explanation").value = "";
-            for (let i = 0; i < 4; i++) {
-                document.getElementById("add-choice" + i).value = "";
-            }
+           clearAddForm();
         }
 
         function backToMenu() {
@@ -2399,6 +3033,48 @@
             document.getElementById("score").textContent =
                 "正解数:" + score + " / " + quizzes.length;
         }
+        function isBookmarked(quiz) {
+            return bookmarks.includes(quiz.question);
+        }
+
+        function toggleBookmark() {
+            const quiz = quizzes[current];
+            if (isBookmarked(quiz)) {
+                bookmarks = bookmarks.filter(function (text) {
+                    return text !== quiz.question;
+                });
+            } else {
+                bookmarks.push(quiz.question);
+            }
+            localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+            updateBookmarkButton();
+        }
+
+        function updateBookmarkButton() {
+            const button = document.getElementById("bookmark-button");
+            if (isBookmarked(quizzes[current])) {
+                button.textContent = "★ ブックマーク済み";
+                button.classList.add("on");
+            } else {
+                button.textContent = "☆ ブックマーク";
+                button.classList.remove("on");
+            }
+        }
+
+        function startBookmarks() {
+            quizzes = allQuizzes.filter(function (quiz) {
+                return isBookmarked(quiz);
+            });
+            if (quizzes.length === 0) {
+                alert("まだブックマークした問題はありません");
+                return;
+            }
+            setInfo = null;
+            progressText = "";
+            isExam = false;
+            beginQuiz();
+        }
+
         function showQuiz() {
             answered = false;
             const quiz = quizzes[current];
@@ -2425,6 +3101,7 @@
                 };
                 choicesDiv.appendChild(button);
             }
+            updateBookmarkButton();
         }
         //答え合わせ
         function check(index) {
@@ -2466,6 +3143,13 @@
         }
         //モード選択から始動
         document.getElementById("set-size").value = localStorage.getItem("setSize") || "all";
+
+        const saveDark = localStorage.getItem("dark");
+        if (saveDark === "1" ||
+            (saveDark === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.body.classList.add("dark");
+        }
+        updateDarkButton();
 
         backToMenu();
         function showExamIntro() {
